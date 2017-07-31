@@ -5,12 +5,16 @@ using namespace cv;
 namespace epilog
 {
 
-CalTex::CalTex()
+void CalTex::genChArUco(cv::aruco::PREDEFINED_DICTIONARY_NAME dict,
+                size_t rows, size_t cols)
 {
-    // Create and save board image
-    aruco::Dictionary dictionary = aruco::getPredefinedDictionary(aruco::DICT_4X4_250); 
-    m_pboard = aruco::CharucoBoard::create(5, 7, 0.04, 0.02, &dictionary); 
-    m_pboard->draw( Size(600, 500), m_image, 10, 1 );
+    m_dictionary = aruco::getPredefinedDictionary(dict); 
+    m_pboard = aruco::CharucoBoard::create(cols, rows, 0.04, 0.02, &m_dictionary); 
+}
+
+void CalTex::genTexture(size_t width, size_t height)
+{
+    m_pboard->draw( Size(width, height), m_image, 10, 1 );
 }
 
 } // namespace epilog

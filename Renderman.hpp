@@ -1,6 +1,8 @@
 #pragma once
 
-#include <GL/glut.h>
+#include "glad.h"
+
+#include <GLFW/glfw3.h>
 
 #include "CalTarget.hpp"
 #include "CameraModel.hpp"
@@ -17,10 +19,12 @@ public:
     Renderman(const CalTarget* target);
     Renderman(const CalTarget* target, const CameraModel& cam_model);
 
-    void init(int argc, char** argv);
+    bool init();
     void renderScene(void);
+    void mainLoop(void);
 
 private:
+    GLFWwindow *        m_pwindow;
     CalTarget const *   m_pTarget;
     CameraModel         m_camModel;
 

@@ -9,13 +9,12 @@ project(${PROJ_NAME})
 
 find_package(OpenCV REQUIRED)
 find_package(OpenGL REQUIRED)
-find_package(GLUT REQUIRED)
 
 include_directories(${OpenCV_INCLUDE_DIRS})
 include_directories(${OPENGL_INCLUDE_DIR})
-include_directories(${GLUT_INCLUDE_DIRS})
 
 add_executable(${PROJ_NAME} main.cpp
+                            glad.c
                             Renderman.cpp
                             CalTarget.cpp
                             CalTex.cpp)
@@ -23,4 +22,5 @@ add_executable(${PROJ_NAME} main.cpp
 target_link_libraries(${PROJ_NAME} 
                         ${OpenCV_LIBS} 
                         ${OPENGL_LIBRARIES}
-                        ${GLUT_LIBRARY})
+                        dl
+                        glfw)

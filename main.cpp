@@ -10,6 +10,8 @@
 #include <string.h>
 #include <time.h>
 
+#include "glad.h"
+
 #include "CalData.hpp"
 #include "Calibrator.hpp"
 #include "CalTarget.hpp"
@@ -19,14 +21,6 @@
 using namespace cv;
 using namespace std;
 using namespace epilog;
-
-// Work around for static rendering function
-//  Admittedly a little ugly but simple and effective.
-Renderman * p_renderer = 0;
-void renderScene()
-{
-    p_renderer->renderScene();
-}
 
 int main( int argc, char** argv )
 {    
@@ -50,20 +44,22 @@ int main( int argc, char** argv )
 
     // Create texture
     CalTex charucoTex;
+    charucoTex.genChArUco(aruco::DICT_4X4_250, 16, 10);
+    charucoTex.genTexture(600, 500);
 
     // Create target
     CalTarget charucoTarget(charucoTex);
 
     // Create renderer
     Renderman renderer(&charucoTarget);
-    renderer.init(argc, argv);
-    p_renderer = &renderer;
-
-	// Register render callback
-	glutDisplayFunc(renderScene);
-
-	// Enter GLUT event processing cycle
-	glutMainLoop();
+    if (!renderer.init()) 
+    {
+        std::cout << "FAIL" << std::endl;
+        char a = 0;
+        cin >> a;
+        return -1;
+    }
+    renderer.mainLoop();
 
     return 0;
 }
