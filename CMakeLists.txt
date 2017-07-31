@@ -15,7 +15,10 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 include_directories(${OPENGL_INCLUDE_DIR})
 include_directories(${GLUT_INCLUDE_DIRS})
 
-add_executable(${PROJ_NAME} main.cpp)
+add_executable(${PROJ_NAME} main.cpp
+                            Renderman.cpp
+                            CalTarget.cpp
+                            CalTex.cpp)
 
 target_link_libraries(${PROJ_NAME} 
                         ${OpenCV_LIBS} 
