@@ -1,6 +1,10 @@
 #include "Renderman.hpp"
 #include "CalData.hpp"
 
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
+
 namespace epilog
 {
 
@@ -103,13 +107,25 @@ bool Renderman::init()
     // Assign Shader Program
     glUseProgram(m_shaderProgram);
     glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);  
+    glDeleteShader(fragmentShader);            
 
     return true;
 }
 
 void Renderman::mainLoop(void)
-{
+{  
+    CalData* config = CalData::getInstance();
+
+    // Perspective Projection
+    float aspectRatio = 
+        (float)config->m_camModel.width / (float)config->m_camModel.height;
+    glm::mat4 proj = glm::perspective(glm::radians(45.0f), 
+                                        aspectRatio, 
+                                        0.1f, 100.0f);
+    glm::mat4 model = glm::rotate(model, glm::radians(-55.0f), 
+                                    glm::vec3(1.0f, 0.0f, 0.0f));
+    glm::mat4 view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));        
+
     // Setup Vertex Array buffer
     GLuint VAO;
     glGenVertexArrays(1, &VAO);
@@ -135,6 +151,14 @@ void Renderman::mainLoop(void)
 
         // Set rendering path
         glUseProgram(m_shaderProgram);
+
+        // Set vertex pipeline matrices
+        int modelLoc = glGetUniformLocation(m_shaderProgram, "model");
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        int viewLoc = glGetUniformLocation(m_shaderProgram, "view");
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        int projLoc = glGetUniformLocation(m_shaderProgram, "projection");
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
 
         // Setup buffers
         m_pTarget->bindTexture();

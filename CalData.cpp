@@ -29,14 +29,21 @@ CalData* CalData::getInstance()
 }
 /// End Singleton pattern code ///
 
+bool CalData::readConfig(std::string filename)
+{
+    return false;
+}
+
 void CalData::readShaders(void)
 {
+    // Setup input streams
     std::ifstream vShaderFile;
     std::ifstream fShaderFile;
     vShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
     fShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
     try 
     {
+        // Read shader files
         vShaderFile.open(m_vertexShaderSourceFile);
         fShaderFile.open(m_fragmentShaderSourceFile);
 
@@ -44,9 +51,11 @@ void CalData::readShaders(void)
         vShaderStream << vShaderFile.rdbuf();
         fShaderStream << fShaderFile.rdbuf();		
 
+        // Save shader source code to strings
         m_vertexShaderSource = vShaderStream.str();
         m_fragmentShaderSource = fShaderStream.str();
 
+        // Clean-up
         vShaderFile.close();
         fShaderFile.close();		
     }

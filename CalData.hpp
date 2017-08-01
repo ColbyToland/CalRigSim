@@ -23,6 +23,9 @@ private:
 public:
     static CalData* getInstance();
 /// End Singleton pattern code ///
+
+    // Populate from a file
+    bool readConfig(std::string filename);
     
     // Read shaders from text files
     void readShaders(void);

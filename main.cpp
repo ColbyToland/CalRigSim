@@ -50,7 +50,7 @@ int main( int argc, char** argv )
     data->m_chessCols = 10;
     data->m_pxWidth = 600;
     data->m_pxHeight = 500;
-    data->m_vertexShaderSourceFile = "basic.vs";
+    data->m_vertexShaderSourceFile = "perspective.vs";
     data->m_fragmentShaderSourceFile = "basic.fs";
     data->readShaders();
 
