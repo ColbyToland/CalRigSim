@@ -7,6 +7,8 @@ list(GET DIR_LIST 0 PROJ_NAME)
 
 project(${PROJ_NAME})
 
+SET(CMAKE_CXX_FLAGS "-std=c++0x")
+
 find_package(OpenCV REQUIRED)
 find_package(OpenGL REQUIRED)
 
@@ -17,7 +19,8 @@ add_executable(${PROJ_NAME} main.cpp
                             glad.c
                             Renderman.cpp
                             CalTarget.cpp
-                            CalTex.cpp)
+                            CalTex.cpp
+                            CalData.cpp)
 
 target_link_libraries(${PROJ_NAME} 
                         ${OpenCV_LIBS} 

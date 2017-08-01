@@ -5,6 +5,8 @@
 #include <opencv2/core/utility.hpp>
 #include <opencv2/aruco/charuco.hpp>
 
+#include <string>
+
 namespace epilog
 {
 
@@ -13,15 +15,12 @@ class CalTex
 public:
     CalTex() { }
 
-    void genChArUco(cv::aruco::PREDEFINED_DICTIONARY_NAME dict,
-                    size_t rows, size_t cols);
-    void genTexture(size_t width, size_t height);
+    void genChArUco();
+    void readImage(std::string filename);
 
     cv::Mat& getTexture() { return m_image; }
 
 private:
-    cv::aruco::Dictionary m_dictionary;
-    cv::Ptr<cv::aruco::CharucoBoard> m_pboard;
     cv::Mat m_image;
 };
 

@@ -13,20 +13,19 @@ namespace epilog
 class Renderman
 {
 public:
-    static CalTarget m_defaultTarget;
+    static CalTarget s_defaultTarget;
 
+    Renderman(CalTarget* target);
     Renderman(void);
-    Renderman(const CalTarget* target);
-    Renderman(const CalTarget* target, const CameraModel& cam_model);
 
     bool init();
-    void renderScene(void);
     void mainLoop(void);
 
 private:
-    GLFWwindow *        m_pwindow;
-    CalTarget const *   m_pTarget;
-    CameraModel         m_camModel;
+    GLFWwindow *    m_pwindow;
+    CalTarget *     m_pTarget;
+
+    GLuint  m_shaderProgram;
 
 };
 

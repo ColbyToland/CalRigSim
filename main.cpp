@@ -42,10 +42,21 @@ int main( int argc, char** argv )
         return -1;
     }
 
+    // Define some configuration data
+    //  In the future populate these values from a config file.
+    CalData* data = CalData::getInstance();
+    data->m_markerDict = aruco::DICT_4X4_250;
+    data->m_chessRows = 16;
+    data->m_chessCols = 10;
+    data->m_pxWidth = 600;
+    data->m_pxHeight = 500;
+    data->m_vertexShaderSourceFile = "basic.vs";
+    data->m_fragmentShaderSourceFile = "basic.fs";
+    data->readShaders();
+
     // Create texture
     CalTex charucoTex;
-    charucoTex.genChArUco(aruco::DICT_4X4_250, 16, 10);
-    charucoTex.genTexture(600, 500);
+    charucoTex.genChArUco();
 
     // Create target
     CalTarget charucoTarget(charucoTex);
