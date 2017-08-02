@@ -48,8 +48,8 @@ int main( int argc, char** argv )
     data->m_markerDict = aruco::DICT_4X4_250;
     data->m_chessRows = 20;
     data->m_chessCols = 10;
-    data->m_pxWidthTarget = 500;
-    data->m_pxHeightTarget = 1000;
+    data->m_pxWidthTarget = 1000;
+    data->m_pxHeightTarget = 2000;
     data->m_vertexShaderSourceFile = "perspective.vs";
     data->m_fragmentShaderSourceFile = "basic.fs";
     data->m_previewVSSourceFile = "preview.vs";
@@ -77,6 +77,13 @@ int main( int argc, char** argv )
         return -1;
     }
     renderer.mainLoop();
+
+    // For now, break out of the mainLoop when enough images exist then enter
+        // the calibration class.
+    if (data->m_calImagesReady)
+    {
+        // call calibration
+    }
 
     return 0;
 }

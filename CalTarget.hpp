@@ -19,7 +19,6 @@ public:
     ~CalTarget(void);
 
     void setupData(void);
-    void bindTexture(void) const;
     void draw(void) const;
 
     void setTexture(cv::Mat& texImg);

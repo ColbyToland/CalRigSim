@@ -290,12 +290,20 @@ void Renderman::mainLoop(void)
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 
                             offscreenTextId, 0);
 
+    // Array for retrieving the texture image
+    size_t numBytes = config->m_camModel.width * config->m_camModel.height * 3;
+    std::unique_ptr<GLubyte> texImg(new GLubyte[numBytes]);
+
+    int rotDeg = 0;
+    int captureAngle = 30;
+
     // Render so long as the window is open
     while(!glfwWindowShouldClose(m_pwindow))
     {
         /// Temporary rotation animation code               ///
-        model = glm::rotate(model, glm::radians(-1.0f),     ///
-                            glm::vec3(0.0f, 0.5f, -1.0f));  ///
+        rotDeg = rotDeg + 1;
+        model = glm::rotate(model, glm::radians(1.0f),
+                            glm::vec3(0.0f, 0.5f, -1.0f));
         /// Temporary rotation animation code               ///
 
         // Offscreen render pass
@@ -313,7 +321,6 @@ void Renderman::mainLoop(void)
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
 
         glBindVertexArray(VAO);
-        m_pTarget->bindTexture();
         m_pTarget->draw();
 
         // Preview render pass 
@@ -323,6 +330,24 @@ void Renderman::mainLoop(void)
         glBindVertexArray(quadVAO);
         glBindTexture(GL_TEXTURE_2D, offscreenTextId);
         glDrawArrays(GL_TRIANGLES, 0, 6); 
+
+        // Save image of the current rendering
+        if (rotDeg <= 360.0
+            && ((int)rotDeg % (int)captureAngle) == 0)
+        {
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, (void *)texImg.get());
+            cv::Mat byteMat = cv::Mat(numBytes, 1, CV_8U, (void *)texImg.get()).clone();
+            cv::Mat img = byteMat.reshape(3, config->m_camModel.height);
+            std::stringstream imgName;
+            //imgName << "cal_" << rotDeg << ".png";
+            //imwrite(imgName.str(), img);
+            config->m_calImages.push_back(img);
+        }
+        if (rotDeg > 360)
+        { 
+            config->m_calImagesReady = true;
+            break;
+        }
 
         glfwSwapBuffers(m_pwindow);
         glfwPollEvents();    

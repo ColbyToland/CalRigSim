@@ -54,6 +54,10 @@ public:
     // Preview window
     size_t m_previewWidth;
     size_t m_previewHeight;
+
+    // Calibration images
+    std::vector<cv::Mat> m_calImages;
+    bool m_calImagesReady;
 };
 
 } // namespace epilog

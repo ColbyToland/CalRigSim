@@ -15,7 +15,10 @@ CalData::CalData()
         m_chessRows(8),
         m_chessCols(8),
         m_pxWidthTarget(100),
-        m_pxHeightTarget(100)
+        m_pxHeightTarget(100),
+        m_previewWidth(100),
+        m_previewHeight(100),
+        m_calImagesReady(false)
 {
 }
 

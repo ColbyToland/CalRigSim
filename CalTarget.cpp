@@ -43,12 +43,8 @@ void CalTarget::setupData(void)
 
 void CalTarget::draw(void) const
 {
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-}
-
-void CalTarget::bindTexture(void) const
-{
     if (m_textureID) glBindTexture(GL_TEXTURE_2D, m_textureID);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
 void CalTarget::setTexture(cv::Mat& texImg)
