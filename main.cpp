@@ -46,13 +46,15 @@ int main( int argc, char** argv )
     //  In the future populate these values from a config file.
     CalData* data = CalData::getInstance();
     data->m_markerDict = aruco::DICT_4X4_250;
-    data->m_chessRows = 16;
+    data->m_chessRows = 20;
     data->m_chessCols = 10;
-    data->m_pxWidth = 600;
-    data->m_pxHeight = 500;
+    data->m_pxWidth = 500;
+    data->m_pxHeight = 1000;
     data->m_vertexShaderSourceFile = "perspective.vs";
     data->m_fragmentShaderSourceFile = "basic.fs";
     data->readShaders();
+    data->m_camModel.width = 1024;
+    data->m_camModel.height = 768;
 
     // Create texture
     CalTex charucoTex;

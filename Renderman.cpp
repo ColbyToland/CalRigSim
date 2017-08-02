@@ -4,6 +4,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include "glm/gtx/string_cast.hpp"
 
 namespace epilog
 {
@@ -122,9 +123,24 @@ void Renderman::mainLoop(void)
     glm::mat4 proj = glm::perspective(glm::radians(45.0f), 
                                         aspectRatio, 
                                         0.1f, 100.0f);
-    glm::mat4 model = glm::rotate(model, glm::radians(-55.0f), 
-                                    glm::vec3(1.0f, 0.0f, 0.0f));
-    glm::mat4 view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));        
+    std::cout << glm::to_string(proj) << std::endl;
+    float texAspectRatio = (float)config->m_pxWidth / (float)config->m_pxHeight;
+    glm::mat4 texturePrescaler;
+    float scaleFactor = 7.0f;
+    texturePrescaler[0][0] = scaleFactor*texAspectRatio;
+    texturePrescaler[1][1] = scaleFactor;
+    glm::mat4 model;
+    model = glm::rotate(model, glm::radians(-45.0f), 
+                        glm::vec3(1.0f, 0.0f, 0.0f));
+    std::cout << glm::to_string(model) << std::endl;
+    glm::mat4 view;
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+    std::cout << glm::to_string(view) << std::endl;
+
+    glm::vec4 testPt(0.5f, 0.5f, 0.0f, 1.0f);   
+
+    glm::vec4 result = /*proj*/model/*view*/*testPt;
+    std::cout << glm::to_string(result) << std::endl;     
 
     // Setup Vertex Array buffer
     GLuint VAO;
@@ -152,7 +168,13 @@ void Renderman::mainLoop(void)
         // Set rendering path
         glUseProgram(m_shaderProgram);
 
+
+        model = glm::rotate(model, glm::radians(-1.0f), 
+                            glm::vec3(0.0f, 0.0f, -1.0f));
+
         // Set vertex pipeline matrices
+        int prescaleLoc = glGetUniformLocation(m_shaderProgram, "prescaler");
+        glUniformMatrix4fv(prescaleLoc, 1, GL_FALSE, glm::value_ptr(texturePrescaler));
         int modelLoc = glGetUniformLocation(m_shaderProgram, "model");
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
         int viewLoc = glGetUniformLocation(m_shaderProgram, "view");
