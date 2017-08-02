@@ -26,6 +26,11 @@ private:
     CalTarget *     m_pTarget;
 
     GLuint  m_shaderProgram;
+    GLuint  m_previewShaderProgram;
+
+    bool initGLFW(void);
+    bool initOffscreenShaders(void);
+    bool initPreviewShaders(void);
 
 };
 

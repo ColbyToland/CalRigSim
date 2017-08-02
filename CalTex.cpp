@@ -21,8 +21,8 @@ void CalTex::genChArUco()
                                                             0.04, 
                                                             0.02, 
                                                             pdict);
-    pboard->draw( Size(config->m_pxWidth, config->m_pxHeight), m_image, 0, 1 );
-    imwrite("charuco_texture.png", m_image);
+    pboard->draw( Size(config->m_pxWidthTarget, config->m_pxHeightTarget), 
+                    m_image, 0, 1 );
 }
 
 void CalTex::readImage(std::string filename)

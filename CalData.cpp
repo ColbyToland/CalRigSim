@@ -14,8 +14,8 @@ CalData::CalData()
     :   m_markerDict(cv::aruco::DICT_4X4_250),
         m_chessRows(8),
         m_chessCols(8),
-        m_pxWidth(100),
-        m_pxHeight(100)
+        m_pxWidthTarget(100),
+        m_pxHeightTarget(100)
 {
 }
 
@@ -39,25 +39,38 @@ void CalData::readShaders(void)
     // Setup input streams
     std::ifstream vShaderFile;
     std::ifstream fShaderFile;
+    std::ifstream previewVShaderFile;
+    std::ifstream previewFShaderFile;
     vShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
     fShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+    previewVShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+    previewFShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
     try 
     {
         // Read shader files
         vShaderFile.open(m_vertexShaderSourceFile);
         fShaderFile.open(m_fragmentShaderSourceFile);
+        previewVShaderFile.open(m_previewVSSourceFile);
+        previewFShaderFile.open(m_previewFSSourceFile);
 
         std::stringstream vShaderStream, fShaderStream;
+        std::stringstream previewVSStream, previewFSStream;
         vShaderStream << vShaderFile.rdbuf();
         fShaderStream << fShaderFile.rdbuf();		
+        previewVSStream << previewVShaderFile.rdbuf();
+        previewFSStream << previewFShaderFile.rdbuf();		
 
         // Save shader source code to strings
         m_vertexShaderSource = vShaderStream.str();
         m_fragmentShaderSource = fShaderStream.str();
+        m_previewVSSource = previewVSStream.str();
+        m_previewFSSource = previewFSStream.str();
 
         // Clean-up
         vShaderFile.close();
-        fShaderFile.close();		
+        fShaderFile.close();	
+        previewVShaderFile.close();
+        previewFShaderFile.close();	
     }
     catch(std::ifstream::failure e)
     {

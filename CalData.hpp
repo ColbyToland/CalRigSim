@@ -34,8 +34,8 @@ public:
     cv::aruco::PREDEFINED_DICTIONARY_NAME m_markerDict;
     size_t m_chessRows;
     size_t m_chessCols;
-    size_t m_pxWidth;
-    size_t m_pxHeight;
+    size_t m_pxWidthTarget;
+    size_t m_pxHeightTarget;
 
     // Shaders
     std::string m_vertexShaderSourceFile;
@@ -43,8 +43,17 @@ public:
     std::string m_vertexShaderSource;
     std::string m_fragmentShaderSource;
 
+    std::string m_previewVSSourceFile;
+    std::string m_previewFSSourceFile;
+    std::string m_previewVSSource;
+    std::string m_previewFSSource;
+
     // Camera parameters
     CameraModel m_camModel;
+
+    // Preview window
+    size_t m_previewWidth;
+    size_t m_previewHeight;
 };
 
 } // namespace epilog

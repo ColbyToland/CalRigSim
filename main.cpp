@@ -48,13 +48,17 @@ int main( int argc, char** argv )
     data->m_markerDict = aruco::DICT_4X4_250;
     data->m_chessRows = 20;
     data->m_chessCols = 10;
-    data->m_pxWidth = 500;
-    data->m_pxHeight = 1000;
+    data->m_pxWidthTarget = 500;
+    data->m_pxHeightTarget = 1000;
     data->m_vertexShaderSourceFile = "perspective.vs";
     data->m_fragmentShaderSourceFile = "basic.fs";
+    data->m_previewVSSourceFile = "preview.vs";
+    data->m_previewFSSourceFile = "preview.fs";
     data->readShaders();
-    data->m_camModel.width = 1024;
-    data->m_camModel.height = 768;
+    data->m_camModel.width = 2048; // 3 MP = 2048x1536?
+    data->m_camModel.height = 1536;
+    data->m_previewWidth = 1024;
+    data->m_previewHeight = 768;
 
     // Create texture
     CalTex charucoTex;
