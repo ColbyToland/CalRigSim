@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <limits>
 
 namespace epilog
 {
@@ -14,11 +15,15 @@ CalData::CalData()
     :   m_markerDict(cv::aruco::DICT_4X4_250),
         m_chessRows(8),
         m_chessCols(8),
+        m_chessSqSz(0.04f), 
+        m_arucoSz(0.02f), 
         m_pxWidthTarget(100),
         m_pxHeightTarget(100),
         m_previewWidth(100),
         m_previewHeight(100),
-        m_calImagesReady(false)
+        m_calImagesReady(false),
+        m_calFlags(0),
+        m_calRepError(std::numeric_limits<double>::max())
 {
 }
 

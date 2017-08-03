@@ -6,7 +6,7 @@
 #include <opencv2/aruco/charuco.hpp>
 
 #include <cctype>
-#include <stdio.h>
+#include <iostream>
 #include <string.h>
 #include <time.h>
 
@@ -82,8 +82,12 @@ int main( int argc, char** argv )
         // the calibration class.
     if (data->m_calImagesReady)
     {
-        // call calibration
+        Calibrator charucoCal;
+        charucoCal.setCalFlags(0);
+        charucoCal.performCal();
     }
+    
+    cout << "Reprojection Error: " << data->m_calRepError << endl;
 
     return 0;
 }

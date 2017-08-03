@@ -20,7 +20,8 @@ add_executable(${PROJ_NAME} main.cpp
                             Renderman.cpp
                             CalTarget.cpp
                             CalTex.cpp
-                            CalData.cpp)
+                            CalData.cpp
+                            Calibrator.cpp)
 
 target_link_libraries(${PROJ_NAME} 
                         ${OpenCV_LIBS} 

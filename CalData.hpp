@@ -34,6 +34,8 @@ public:
     cv::aruco::PREDEFINED_DICTIONARY_NAME m_markerDict;
     size_t m_chessRows;
     size_t m_chessCols;
+    float  m_chessSqSz; 
+    float  m_arucoSz; 
     size_t m_pxWidthTarget;
     size_t m_pxHeightTarget;
 
@@ -58,6 +60,14 @@ public:
     // Calibration images
     std::vector<cv::Mat> m_calImages;
     bool m_calImagesReady;
+    
+    // Calibration results
+    cv::Mat m_calCamMatrix;
+    cv::Mat m_calDistCoeffs;
+    std::vector<cv::Mat> m_calRMats;
+    std::vector<cv::Mat> m_calTMats;
+    int m_calFlags;
+    double m_calRepError;
 };
 
 } // namespace epilog
