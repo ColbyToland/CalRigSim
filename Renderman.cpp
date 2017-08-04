@@ -1,11 +1,6 @@
 #include "Renderman.hpp"
 #include "CalData.hpp"
 
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtc/type_ptr.hpp"
-#include "glm/gtx/string_cast.hpp"
-
 namespace epilog
 {
 
@@ -209,30 +204,62 @@ bool Renderman::init(void)
     return true;
 }
 
+glm::mat4 Renderman::convertCVtoGLCamera(cv::Mat& ocvCam, float near, float far)
+{        
+    // OpenCV Camera
+    // [alpha   0       cx]
+    // [0       beta    cy]
+    // [0       0       1 ]
+    
+    // OpenGL Camera
+    // [near/right  0           0                       0                       ]
+    // [0           near/top    0                       0                       ]
+    // [0           0           -(far+near)/(far-near)  0                       ]
+    // [0           0           -1                      -2*far*near/(far-near)  ]
+
+    glm::mat4 glCam;
+
+    float m11 = ocvCam.at<float>(0,0) / ocvCam.at<float>(0,2); // alpha / cx
+    float m22 = ocvCam.at<float>(1,1) / ocvCam.at<float>(1,2); // beta / cy
+    float m33 = -(far+near)/(far-near);
+    float m34 = -2*far*near/(far-near);
+    
+    glCam[0][0] = m11;
+    glCam[1][1] = m22;
+    glCam[2][2] = m33;
+    glCam[3][2] = m34;
+    glCam[2][3] = -1.0f;
+    glCam[3][3] = 0.0f; // Loaded with identity by default
+
+    return glCam;
+}
+
+glm::mat4 Renderman::projectiveCam(float near, float far)
+{
+    CalData* config = CalData::getInstance();
+    
+    cv::Mat ocvCam = cv::Mat::eye(3,3,CV_32F);
+    float f_pixels = config->m_camModel.width / (2.0f*glm::tan(glm::radians(config->m_camModel.fov/2.0f)));
+    ocvCam.at<float>(0,0) = f_pixels;
+    ocvCam.at<float>(1,1) = f_pixels;
+    ocvCam.at<float>(0,2) = config->m_camModel.width / 2;
+    ocvCam.at<float>(1,2) = config->m_camModel.height / 2;
+    
+    return convertCVtoGLCamera(ocvCam, near, far);
+}
+
 void Renderman::mainLoop(void)
 {  
     CalData* config = CalData::getInstance();
 
     // Perspective Projection pipeline matrices
-    float aspectRatio = 
-        (float)config->m_camModel.width / (float)config->m_camModel.height;
-    glm::mat4 proj = glm::perspective(glm::radians(45.0f), 
-                                        aspectRatio, 
-                                        0.1f, 100.0f);
-
-    glm::mat4 model;
-    model = glm::rotate(model, glm::radians(-45.0f), 
-                        glm::vec3(1.0f, 0.0f, 0.0f));
-
-    glm::mat4 view;
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));    
+    glm::mat4 proj = projectiveCam(0.1f, 100.0f); 
 
     float texAspectRatio = 
         (float)config->m_pxWidthTarget / (float)config->m_pxHeightTarget;
     glm::mat4 texturePrescaler;
-    float scaleFactor = 7.0f;
-    texturePrescaler[0][0] = scaleFactor*texAspectRatio;
-    texturePrescaler[1][1] = scaleFactor;
+    texturePrescaler[0][0] = texAspectRatio;
+    texturePrescaler[1][1] = 1.0f;
 
     // Setup the vertex buffer, vertex array buffer, and element buffer for
         // offscreen rendering
@@ -296,14 +323,21 @@ void Renderman::mainLoop(void)
 
     int rotDeg = 0;
     int captureAngle = 30;
+    bool saveImages = false;
 
     // Render so long as the window is open
     while(!glfwWindowShouldClose(m_pwindow))
     {
         /// Temporary rotation animation code               ///
         rotDeg = rotDeg + 1;
-        model = glm::rotate(model, glm::radians(1.0f),
-                            glm::vec3(0.0f, 0.5f, -1.0f));
+        glm::mat4 model = glm::mat4();
+        model = glm::rotate(model, glm::radians((float)rotDeg),
+                            glm::vec3(0.0f, 0.0f, -1.0f));
+        model = glm::rotate(model, glm::radians(-45.0f),
+                            glm::vec3(1.0f, 0.0f, 0.0f));
+
+        glm::mat4 view;
+        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -0.4f));
         /// Temporary rotation animation code               ///
 
         // Offscreen render pass
@@ -338,10 +372,13 @@ void Renderman::mainLoop(void)
             glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, (void *)texImg.get());
             cv::Mat byteMat = cv::Mat(numBytes, 1, CV_8U, (void *)texImg.get()).clone();
             cv::Mat img = byteMat.reshape(3, config->m_camModel.height);
-            std::stringstream imgName;
-            //imgName << "cal_" << rotDeg << ".png";
-            //imwrite(imgName.str(), img);
             config->m_calImages.push_back(img);
+            if (saveImages)
+            { 
+                std::stringstream imgName;
+                imgName << "cal_" << rotDeg << ".png";
+                imwrite(imgName.str(), img);
+            }
         }
         if (rotDeg > 360)
         { 

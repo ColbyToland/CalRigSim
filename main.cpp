@@ -12,6 +12,11 @@
 
 #include "glad.h"
 
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
+#include "glm/gtx/string_cast.hpp"
+
 #include "CalData.hpp"
 #include "Calibrator.hpp"
 #include "CalTarget.hpp"
@@ -45,9 +50,10 @@ int main( int argc, char** argv )
     // Define some configuration data
     //  In the future populate these values from a config file.
     CalData* data = CalData::getInstance();
-    data->m_markerDict = aruco::DICT_4X4_250;
-    data->m_chessRows = 20;
-    data->m_chessCols = 10;
+    data->m_markerDict = aruco::DICT_4X4_1000;
+    int size = 15;
+    data->m_chessRows = 2*size;
+    data->m_chessCols = size;
     data->m_pxWidthTarget = 1000;
     data->m_pxHeightTarget = 2000;
     data->m_vertexShaderSourceFile = "perspective.vs";
@@ -57,6 +63,7 @@ int main( int argc, char** argv )
     data->readShaders();
     data->m_camModel.width = 2048; // 3 MP = 2048x1536?
     data->m_camModel.height = 1536;
+    data->m_camModel.fov = 100;
     data->m_previewWidth = 1024;
     data->m_previewHeight = 768;
 
@@ -83,11 +90,16 @@ int main( int argc, char** argv )
     if (data->m_calImagesReady)
     {
         Calibrator charucoCal;
-        charucoCal.setCalFlags(0);
+        charucoCal.setCalFlags(CV_CALIB_FIX_ASPECT_RATIO);
         charucoCal.performCal();
     }
     
     cout << "Reprojection Error: " << data->m_calRepError << endl;
+    cout << "Camera Matrix: \n" << data->m_calCamMatrix << endl;
+    float halfw = data->m_camModel.width / 2.0f;
+    float fov = 2.0f*glm::degrees(glm::atan((float)data->m_calCamMatrix.at<double>(0,0),halfw));
+    printf("FOV: %f\n", fov);
+    cout << "Distortion Model: \n" << data->m_calDistCoeffs << endl;
 
     return 0;
 }

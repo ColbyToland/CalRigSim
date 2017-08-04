@@ -63,7 +63,7 @@ bool Calibrator::performCal(void)
         aruco::detectMarkers(img, dict, corners, ids, params, rejected);
 
         // refind strategy to detect more markers
-        // aruco::refineDetectedMarkers(image, board, corners, ids, rejected);
+        // aruco::refineDetectedMarkers(img, board, corners, ids, rejected);
 
         // interpolate charuco corners
         Mat currentCharucoCorners, currentCharucoIds;
