@@ -3,7 +3,7 @@
 #define CAMERA_TAG "camera"
     #define CAM_WIDTH_TAG "width"
     #define CAM_HEIGHT_TAG "height"
-    #define CAM_FOV_TAG "fov"
+    #define CAM_FOCAL_LEN_TAG "focal_len_px"
 
 #define RENDERER_TAG "renderer"
     #define RENDERER_PREVIEW_WIDTH_TAG "preview_width"

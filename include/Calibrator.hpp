@@ -8,6 +8,8 @@ namespace epilog
 class Calibrator
 {
 public:
+    static const size_t MIN_IMAGES = 5;
+
     Calibrator(void);
 
     // Replace current flags with a new flags value

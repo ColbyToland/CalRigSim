@@ -1,23 +1,348 @@
 #include "Renderman.hpp"
 #include "config/CalData.hpp"
 
+#include "Calibrator.hpp"
+
+#include "Debugger.hpp"
+
 namespace epilog
 {
 
-CalTarget Renderman::s_defaultTarget = CalTarget();
+Renderman::Renderman(void) : m_shaderProgram(0)
+{}
 
-// "Delegating Constructor"
-// ========================
-//  All other constructors call this constructor to initialize variables
-Renderman::Renderman(CalTarget* target)
-    :   m_pTarget(target),
-        m_shaderProgram(0)
+bool Renderman::init(void)
 {
+    CalData* config = CalData::getInstance();
+
+    bool success = true;
+
+    success = initGLFW();
+    if (!success)
+    {
+        std::cout << "initGLFW failed" << std::endl;
+        return false;
+    }
+
+    success = initOffscreenShaders();
+    if (!success)
+    {
+        std::cout << "initOffscreenShaders failed" << std::endl;
+        return false;
+    } 
+
+    success = initPreviewShaders();
+    if (!success)
+    {
+        std::cout << "initPreviewShaders failed" << std::endl;
+        return false;
+    }
+
+    return true;
 }
 
-Renderman::Renderman(void) 
-    : Renderman(&s_defaultTarget)
-{}
+void privateSetupData(cv::Mat& m_texImg, GLuint& m_textureID, GLuint& VAO)
+{
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
+    GLuint VBO;
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    GLuint EBO;
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+
+    // Setup calibration target data
+    float vertices[] = {
+        // positions          // colors
+         0.5f,  0.5f, 0.0f,   1.0f, 1.0f,   // top right
+         0.5f, -0.5f, 0.0f,   1.0f, 0.0f,   // bottom right
+        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f,   // bottom left
+        -0.5f,  0.5f, 0.0f,   0.0f, 1.0f    // top left 
+    };
+    unsigned int indices[] = {
+        0, 1, 3,  // first Triangle
+        1, 2, 3   // second Triangle
+    };
+
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, 
+                    GL_STATIC_DRAW);
+
+    // Describe the vertex array contents
+    // position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // texture coord attribute
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    // setup texture
+    if (m_textureID)
+        glDeleteTextures(1, &m_textureID);
+	glGenTextures(1, &m_textureID);
+	glBindTexture(GL_TEXTURE_2D, m_textureID);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    float borderColor[] = {0.0f, 1.0f, 0.0f, 1.0f};
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    GLenum colorFormat = GL_BGR;
+	if (m_texImg.channels() == 1)
+	{
+		colorFormat = GL_LUMINANCE;
+	}
+ 
+	// Create the texture
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 
+                    m_texImg.cols, m_texImg.rows, 
+                    0, colorFormat, GL_UNSIGNED_BYTE,
+                    m_texImg.ptr());
+}
+
+void privateSetupPreview(GLuint& quadVAO)
+{
+    float quadVertices[] = {
+        // positions   // texCoords
+        -1.0f,  1.0f,  0.0f, 1.0f,
+        -1.0f, -1.0f,  0.0f, 0.0f,
+         1.0f, -1.0f,  1.0f, 0.0f,
+
+        -1.0f,  1.0f,  0.0f, 1.0f,
+         1.0f, -1.0f,  1.0f, 0.0f,
+         1.0f,  1.0f,  1.0f, 1.0f
+    };
+    GLuint quadVBO;
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 
+                            (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 
+                            (void*)(2 * sizeof(float)));
+}
+
+void privateSetupFrameBuffer(GLuint& fbo, GLuint& offscreenTextId)
+{
+    CalData* config = CalData::getInstance();
+    
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo); // Set frame buffer
+    glGenTextures(1, &offscreenTextId);
+    glBindTexture(GL_TEXTURE_2D, offscreenTextId);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 
+                    config->m_camModel.m_width, config->m_camModel.m_height, 
+                    0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 
+                            offscreenTextId, 0);
+}
+
+void Renderman::oldMainLoop(void)
+{  
+    CalData* config = CalData::getInstance();
+    
+    cv::Mat m_texImg = cv::imread("charuco_board.png");
+    GLuint  m_textureIDs[3];
+
+    // Setup the vertex buffer, vertex array buffer, and element buffer for
+        // offscreen rendering
+    GLuint VAOs[3];
+    privateSetupData(m_texImg, m_textureIDs[0], VAOs[0]);
+    privateSetupData(m_texImg, m_textureIDs[1], VAOs[1]);
+    privateSetupData(m_texImg, m_textureIDs[2], VAOs[2]);
+    
+    GLuint m_textureID = m_textureIDs[2];
+    GLuint VAO = VAOs[2];
+
+    // Setup preview "screen" quad 
+    GLuint quadVAO;
+    privateSetupPreview(quadVAO);
+
+    // Create a framebuffer for offscreen rendering to a texture
+    GLuint fbo;
+    GLuint offscreenTextId;
+    privateSetupFrameBuffer(fbo, offscreenTextId);
+    
+
+    // Array for retrieving the texture image
+    size_t numBytes = config->m_camModel.m_width * config->m_camModel.m_height * 3;
+    std::unique_ptr<GLubyte> texImg(new GLubyte[numBytes]);
+
+    // Perspective Projection pipeline matrices
+    glm::mat4 proj = projectiveCam(0.1f, 100.0f);
+
+    int rotDeg = 0;
+    int captureAngle = 30;
+    bool saveImages = false;
+
+    // Render so long as the window is open
+    while(!glfwWindowShouldClose(m_pwindow))
+    {
+        /// Temporary rotation animation code               ///
+        rotDeg = rotDeg + 1;
+        glm::mat4 model = glm::mat4();
+        model = glm::rotate(model, glm::radians((float)rotDeg),
+                            glm::vec3(0.0f, 0.0f, -1.0f));
+        model = glm::rotate(model, glm::radians(-45.0f),
+                            glm::vec3(1.0f, 0.0f, 0.0f));
+
+        glm::mat4 view;
+        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -0.4f));
+        /// Temporary rotation animation code               ///
+
+        // Offscreen render pass
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
+        glUseProgram(m_shaderProgram);
+
+        int modelLoc = glGetUniformLocation(m_shaderProgram, "model");
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        int viewLoc = glGetUniformLocation(m_shaderProgram, "view");
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        int projLoc = glGetUniformLocation(m_shaderProgram, "projection");
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+
+        glBindVertexArray(VAO);    
+        if (m_textureID) 
+            glBindTexture(GL_TEXTURE_2D, m_textureID);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        // Preview render pass 
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glUseProgram(m_previewShaderProgram);
+        glBindVertexArray(quadVAO);
+        glBindTexture(GL_TEXTURE_2D, offscreenTextId);
+        glDrawArrays(GL_TRIANGLES, 0, 6); 
+
+        // Save image of the current rendering
+        if (rotDeg <= 360.0
+            && ((int)rotDeg % (int)captureAngle) == 0)
+        {
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, (void *)texImg.get());
+            cv::Mat byteMat = cv::Mat(numBytes, 1, CV_8U, (void *)texImg.get()).clone();
+            cv::Mat img = byteMat.reshape(3, config->m_camModel.m_height);
+            config->m_calImages.push_back(img);
+            if (saveImages)
+            { 
+                std::stringstream imgName;
+                imgName << "cal_" << rotDeg << ".png";
+                imwrite(imgName.str(), img);
+            }
+        }
+        if (rotDeg > 360)
+        { 
+            config->m_calImagesReady = true;
+            break;
+        }
+
+        glfwSwapBuffers(m_pwindow);
+        glfwPollEvents();    
+    }
+
+    glDeleteFramebuffers(1, &fbo); 
+
+    glfwTerminate();
+}
+
+void Renderman::mainLoop(void)
+{  
+    CalData* config = CalData::getInstance();
+
+    // Setup calibration target data
+    for (auto kv : config->m_targets)
+    {
+        kv.second.setupData();
+    }
+    
+    // Setup preview pane
+    GLuint quadVAO;
+    setupPreview(quadVAO);
+
+    // Create a framebuffer for offscreen rendering to a texture
+    GLuint fbo;
+    GLuint offscreenTextId;
+    setupFramebuffer(fbo, offscreenTextId);
+
+    // Array for retrieving the texture image
+    size_t numBytes = config->m_camModel.m_width * config->m_camModel.m_height * 3;
+    std::unique_ptr<GLubyte> texImg(new GLubyte[numBytes]);
+
+    // Perspective Projection pipeline matrices
+    glm::mat4 proj = projectiveCam(0.1f, 100.0f);
+    
+    // Render so long as the window is open
+    bool saveImages = true;
+    size_t capInd = 0;
+    size_t totalCaps = config->m_captures.size();
+    /*
+    for (capInd = 0; 
+         capInd < totalCaps; 
+         ++capInd)
+         */
+    while (!glfwWindowShouldClose(m_pwindow))
+    {
+        // compose transform in model matrix
+        glm::mat4 model = config->m_captures[capInd].composite();
+        
+        // Offscreen render pass
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        glClearColor(0.0f,1.0f,0.0f,1.0f);
+	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
+        glUseProgram(m_shaderProgram);
+        
+        int modelLoc = glGetUniformLocation(m_shaderProgram, "modelview");
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        int projLoc = glGetUniformLocation(m_shaderProgram, "projection");
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+
+        size_t targetInd = config->m_captures[capInd].m_targetID;
+        config->m_targets.at(targetInd).draw();
+        /*
+        // Save rendering
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, (void *)texImg.get());
+        cv::Mat byteMat = cv::Mat(numBytes, 1, CV_8U, (void *)texImg.get()).clone();
+        cv::Mat img = byteMat.reshape(3, config->m_camModel.m_height);
+        config->m_calImages.push_back(img);
+        if (saveImages)
+        { 
+            std::stringstream imgName;
+            imgName << "cal_" << capInd << ".png";
+            imwrite(imgName.str(), img);
+        }
+        */
+        // Preview render pass 
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glUseProgram(m_previewShaderProgram);
+        glBindVertexArray(quadVAO);
+        glBindTexture(GL_TEXTURE_2D, offscreenTextId);
+        glDrawArrays(GL_TRIANGLES, 0, 6); 
+
+        glfwSwapBuffers(m_pwindow);
+        glfwPollEvents();    
+    }
+    
+    // If all images were captured, we are ready for calibration
+    if (    (capInd == totalCaps) 
+        &&  (totalCaps >= Calibrator::MIN_IMAGES) )
+    {
+        config->m_calImagesReady = true;
+    }
+
+    // Clean-up
+    glDeleteFramebuffers(1, &fbo); 
+    glfwTerminate();
+}
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -174,36 +499,6 @@ bool Renderman::initPreviewShaders(void)
     return true;
 }
 
-bool Renderman::init(void)
-{
-    CalData* config = CalData::getInstance();
-
-    bool success = true;
-
-    success = initGLFW();
-    if (!success)
-    {
-        std::cout << "initGLFW failed" << std::endl;
-        return false;
-    }
-
-    success = initOffscreenShaders();
-    if (!success)
-    {
-        std::cout << "initOffscreenShaders failed" << std::endl;
-        return false;
-    } 
-
-    success = initPreviewShaders();
-    if (!success)
-    {
-        std::cout << "initPreviewShaders failed" << std::endl;
-        return false;
-    }
-
-    return true;
-}
-
 glm::mat4 Renderman::convertCVtoGLCamera(cv::Mat& ocvCam, float near, float far)
 {        
     // OpenCV Camera
@@ -239,45 +534,16 @@ glm::mat4 Renderman::projectiveCam(float near, float far)
     CalData* config = CalData::getInstance();
     
     cv::Mat ocvCam = cv::Mat::eye(3,3,CV_32F);
-    float f_pixels = config->m_camModel.m_width / (2.0f*glm::tan(glm::radians(config->m_camModel.m_fov/2.0f)));
-    ocvCam.at<float>(0,0) = f_pixels;
-    ocvCam.at<float>(1,1) = f_pixels;
-    ocvCam.at<float>(0,2) = config->m_camModel.m_width / 2;
-    ocvCam.at<float>(1,2) = config->m_camModel.m_height / 2;
+    ocvCam.at<float>(0,0) = config->m_camModel.m_focal_len;
+    ocvCam.at<float>(1,1) = config->m_camModel.m_focal_len;
+    ocvCam.at<float>(0,2) = config->m_camModel.m_width / 2.0f;
+    ocvCam.at<float>(1,2) = config->m_camModel.m_height / 2.0f;
     
     return convertCVtoGLCamera(ocvCam, near, far);
 }
 
-void Renderman::mainLoop(void)
-{  
-    CalData* config = CalData::getInstance();
-
-    // Perspective Projection pipeline matrices
-    glm::mat4 proj = projectiveCam(0.1f, 100.0f); 
-
-    float texAspectRatio = 
-        (float)config->m_textures[0].m_pxWidthTarget / (float)config->m_textures[0].m_pxHeightTarget;
-    glm::mat4 texturePrescaler;
-    texturePrescaler[0][0] = texAspectRatio;
-    texturePrescaler[1][1] = 1.0f;
-
-    // Setup the vertex buffer, vertex array buffer, and element buffer for
-        // offscreen rendering
-    GLuint VAO;
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-
-    GLuint VBO;
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-    GLuint EBO;
-    glGenBuffers(1, &EBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-
-    // Setup calibration target data
-    m_pTarget->setupData();
-
+void Renderman::setupPreview(GLuint& quadVAO)
+{
     // Setup preview "screen" quad    
     float quadVertices[] = {
         // positions   // texCoords
@@ -289,7 +555,7 @@ void Renderman::mainLoop(void)
          1.0f, -1.0f,  1.0f, 0.0f,
          1.0f,  1.0f,  1.0f, 1.0f
     };
-    unsigned int quadVAO, quadVBO;
+    GLuint quadVBO;
     glGenVertexArrays(1, &quadVAO);
     glGenBuffers(1, &quadVBO);
     glBindVertexArray(quadVAO);
@@ -301,12 +567,14 @@ void Renderman::mainLoop(void)
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 
                             (void*)(2 * sizeof(float)));
+}
 
-    // Create a framebuffer for offscreen rendering to a texture
-    GLuint fbo;
+void Renderman::setupFramebuffer(GLuint& fbo, GLuint& offscreenTextId)
+{
+    CalData* config = CalData::getInstance();
+    
     glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo); // Set frame buffer
-    GLuint offscreenTextId;
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     glGenTextures(1, &offscreenTextId);
     glBindTexture(GL_TEXTURE_2D, offscreenTextId);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 
@@ -316,83 +584,6 @@ void Renderman::mainLoop(void)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 
                             offscreenTextId, 0);
-
-    // Array for retrieving the texture image
-    size_t numBytes = config->m_camModel.m_width * config->m_camModel.m_height * 3;
-    std::unique_ptr<GLubyte> texImg(new GLubyte[numBytes]);
-
-    int rotDeg = 0;
-    int captureAngle = 30;
-    bool saveImages = false;
-
-    // Render so long as the window is open
-    while(!glfwWindowShouldClose(m_pwindow))
-    {
-        /// Temporary rotation animation code               ///
-        rotDeg = rotDeg + 1;
-        glm::mat4 model = glm::mat4();
-        model = glm::rotate(model, glm::radians((float)rotDeg),
-                            glm::vec3(0.0f, 0.0f, -1.0f));
-        model = glm::rotate(model, glm::radians(-45.0f),
-                            glm::vec3(1.0f, 0.0f, 0.0f));
-
-        glm::mat4 view;
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -0.4f));
-        /// Temporary rotation animation code               ///
-
-        // Offscreen render pass
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
-        glUseProgram(m_shaderProgram);
-
-        int prescaleLoc = glGetUniformLocation(m_shaderProgram, "prescaler");
-        glUniformMatrix4fv(prescaleLoc, 1, GL_FALSE, glm::value_ptr(texturePrescaler));
-        int modelLoc = glGetUniformLocation(m_shaderProgram, "model");
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        int viewLoc = glGetUniformLocation(m_shaderProgram, "view");
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-        int projLoc = glGetUniformLocation(m_shaderProgram, "projection");
-        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
-
-        glBindVertexArray(VAO);
-        m_pTarget->draw();
-
-        // Preview render pass 
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glUseProgram(m_previewShaderProgram);
-        glBindVertexArray(quadVAO);
-        glBindTexture(GL_TEXTURE_2D, offscreenTextId);
-        glDrawArrays(GL_TRIANGLES, 0, 6); 
-
-        // Save image of the current rendering
-        if (rotDeg <= 360.0
-            && ((int)rotDeg % (int)captureAngle) == 0)
-        {
-            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, (void *)texImg.get());
-            cv::Mat byteMat = cv::Mat(numBytes, 1, CV_8U, (void *)texImg.get()).clone();
-            cv::Mat img = byteMat.reshape(3, config->m_camModel.m_height);
-            config->m_calImages.push_back(img);
-            if (saveImages)
-            { 
-                std::stringstream imgName;
-                imgName << "cal_" << rotDeg << ".png";
-                imwrite(imgName.str(), img);
-            }
-        }
-        if (rotDeg > 360)
-        { 
-            config->m_calImagesReady = true;
-            break;
-        }
-
-        glfwSwapBuffers(m_pwindow);
-        glfwPollEvents();    
-    }
-
-    glDeleteFramebuffers(1, &fbo); 
-
-    glfwTerminate();
 }
 
 } // namespace epilog

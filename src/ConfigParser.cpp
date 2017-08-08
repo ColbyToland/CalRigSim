@@ -8,6 +8,7 @@ namespace epilog
 
 bool ConfigParser::readFile(string filename)
 {
+    CalData* config = CalData::getInstance();
     bool success = true;
 
     FileStorage fs;
@@ -29,6 +30,7 @@ bool ConfigParser::readFile(string filename)
     {
         readTextureSettings(node);
     }
+    config->generateTextures();
     
     FileNode targetNode = fs[TARGETS_TAG];
     if (targetNode.type() != FileNode::SEQ)
@@ -41,6 +43,7 @@ bool ConfigParser::readFile(string filename)
         success = readTargetSettings(node);
         if (!success) return false;
     }
+    config->generateTargets();
     
     FileNode captureNode = fs[CAPTURES_TAG];
     if (captureNode.type() != FileNode::SEQ)
@@ -61,7 +64,7 @@ void ConfigParser::readCamSettings(FileNode& cameraNode)
     CalData* config = CalData::getInstance();
     config->m_camModel.m_width = (int)cameraNode[CAM_WIDTH_TAG];
     config->m_camModel.m_height = (int)cameraNode[CAM_HEIGHT_TAG];
-    config->m_camModel.m_fov = (float)cameraNode[CAM_FOV_TAG];
+    config->m_camModel.m_focal_len = (float)cameraNode[CAM_FOCAL_LEN_TAG];
 }
 
 void ConfigParser::readRendererSettings(FileNode& rendererNode)
@@ -77,6 +80,7 @@ void ConfigParser::readRendererSettings(FileNode& rendererNode)
             (string)rendererNode[RENDERER_PREVIEW_VERTEX_SHADER_FILENAME_TAG];
     config->m_previewFSSourceFile = 
             (string)rendererNode[RENDERER_PREVIEW_FRAGMENT_SHADER_FILENAME_TAG];
+    config->readShaders();
 }
 
 void ConfigParser::readTextureSettings(FileNode& textureNode)
@@ -113,7 +117,7 @@ void ConfigParser::readTextureSettings(FileNode& textureNode)
             break;
     }
     
-    config->m_textures[texID] = texture;
+    config->m_textureSettings[texID] = texture;
 }
 
 bool ConfigParser::readTargetSettings(FileNode& targetNode)
@@ -176,7 +180,7 @@ bool ConfigParser::readTargetSettings(FileNode& targetNode)
     }
     target.m_triCount = triCount;
     
-    config->m_targets.insert(pair<int, TargetConfigData>(targetID, target));
+    config->m_targetSettings.insert(pair<int, TargetConfigData>(targetID, target));
     
     return true;
 }
@@ -184,8 +188,9 @@ bool ConfigParser::readTargetSettings(FileNode& targetNode)
 void ConfigParser::readCaptureSettings(FileNode& captureNode)
 {
     CalData* config = CalData::getInstance();
-    int targetID = captureNode[CAPTURE_TARGET_ID_TAG];
     CapturePositionConfig capture;
+    
+    capture.m_targetID = captureNode[CAPTURE_TARGET_ID_TAG];
     
     // Read transforms
     FileNode tNode = captureNode[CAPTURE_TRANSFORMS_TAG];

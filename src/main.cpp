@@ -23,6 +23,8 @@
 #include "CalTex.hpp"
 #include "Renderman.hpp"
 
+#include "Debugger.hpp"
+
 using namespace cv;
 using namespace std;
 using namespace epilog;
@@ -31,10 +33,11 @@ int main( int argc, char** argv )
 {    
     // Command line argument parsing
     CommandLineParser parser(argc, argv,
-        "{help h usage ?|               | print this message        }"
+        "{help h usage ?|               | print this message        }"        
+        "{@config       |               | config file name          }"
         );
         
-    if (parser.has("help"))
+    if (parser.has("help") || !parser.has("@config"))
     {
         parser.printMessage();
         return 0;
@@ -46,46 +49,47 @@ int main( int argc, char** argv )
         parser.printErrors();
         return -1;
     }
+    
+    string configFilename = parser.get<string>("@config");
 
     // Define some configuration data
     //  In the future populate these values from a config file.
+    DEBUG_OUT("Read yml configuration");
     CalData* data = CalData::getInstance();
-    bool success = ConfigParser::readFile("test.yml");
+    bool success = ConfigParser::readFile(configFilename);
     if (!success) return -1;
-
-    // Create texture
-    CalTex charucoTex;
-    charucoTex.genChArUco();
-
-    // Create target
-    CalTarget charucoTarget(charucoTex);
+    
+    DEBUG_OUT(std::string(*data));
 
     // Create renderer
-    Renderman renderer(&charucoTarget);
+    DEBUG_OUT("Create renderer");
+    Renderman renderer;
+    DEBUG_OUT("Initialize renderer");
     if (!renderer.init()) 
     {
-        std::cout << "FAIL" << std::endl;
-        char a = 0;
-        cin >> a;
+        std::cout << "RENDERER INIT FAIL" << std::endl;
         return -1;
     }
-    renderer.mainLoop();
+    DEBUG_OUT("Begin render loop");
+    renderer.oldMainLoop();
+    //renderer.mainLoop();
 
-    // For now, break out of the mainLoop when enough images exist then enter
-        // the calibration class.
+    // Calibrate
+    DEBUG_OUT("Calibrate");
     if (data->m_calImagesReady)
     {
         Calibrator charucoCal;
         charucoCal.setCalFlags(CV_CALIB_FIX_ASPECT_RATIO);
         charucoCal.performCal();
-    }
     
-    cout << "Reprojection Error: " << data->m_calRepError << endl;
-    cout << "Camera Matrix: \n" << data->m_calCamMatrix << endl;
-    float halfw = data->m_camModel.m_width / 2.0f;
-    float fov = 2.0f*glm::degrees(glm::atan((float)data->m_calCamMatrix.at<double>(0,0),halfw));
-    printf("FOV: %f\n", fov);
-    cout << "Distortion Model: \n" << data->m_calDistCoeffs << endl;
+        cout << "Reprojection Error: " << data->m_calRepError << endl;
+        cout << "Camera Matrix: \n" << data->m_calCamMatrix << endl;
+        cout << "Distortion Model: \n" << data->m_calDistCoeffs << endl;
+    }
+    else
+    {
+        cout << "Could not calibrate." << endl;
+    }
 
     return 0;
 }

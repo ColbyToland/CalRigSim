@@ -6,24 +6,30 @@ using namespace cv;
 namespace epilog
 {
 
-void CalTex::genChArUco()
+CalTex::CalTex(TextureConfigData& texConfig)
 {
-    CalData* config = CalData::getInstance();
-
-    Ptr<aruco::Dictionary> dict = aruco::getPredefinedDictionary(config->m_textures[0].m_markerDict);
-    Ptr<aruco::CharucoBoard> pboard = aruco::CharucoBoard::create(
-                                                            config->m_textures[0].m_chessCols, 
-                                                            config->m_textures[0].m_chessRows, 
-                                                            config->m_textures[0].m_chessSqSz, 
-                                                            config->m_textures[0].m_arucoSz,
-                                                            dict);
-    pboard->draw( Size(config->m_textures[0].m_pxWidthTarget, config->m_textures[0].m_pxHeightTarget), 
-                    m_image, 0, 1 );
-}
-
-void CalTex::readImage(std::string filename)
-{
-    m_image = imread(filename);
+    if (TextureType::CHARUCO_TEXTURE == texConfig.m_type)
+    {
+        Ptr<aruco::Dictionary> dict = aruco::getPredefinedDictionary(
+                                                        texConfig.m_markerDict);
+        Ptr<aruco::CharucoBoard> pboard = aruco::CharucoBoard::create(
+                                                        texConfig.m_chessCols, 
+                                                        texConfig.m_chessRows, 
+                                                        texConfig.m_chessSqSz, 
+                                                        texConfig.m_arucoSz,
+                                                        dict);
+        pboard->draw( Size(texConfig.m_pxWidthTarget, 
+                            texConfig.m_pxHeightTarget), 
+                     m_image, 0, 1 );
+    }
+    else if (TextureType::IMAGE_TEXTURE == texConfig.m_type)
+    {    
+        m_image = imread(texConfig.m_imgFilename);
+    }
+    else /// TextureType::INVALID
+    {
+        m_image = cv::Mat(100, 100, CV_8UC3, Scalar(0,255,0));
+    }
 }
 
 } // namespace epilog

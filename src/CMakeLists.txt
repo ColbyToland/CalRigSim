@@ -1,4 +1,4 @@
-SET(CMAKE_CXX_FLAGS "-std=c++0x")
+SET(CMAKE_CXX_FLAGS "-std=c++0x -D__DEBUG_COUT__")
 
 find_package(OpenCV REQUIRED)
 find_package(OpenGL REQUIRED)
@@ -12,6 +12,7 @@ add_executable(${PROJ_NAME} main.cpp
                             CalTex.cpp
                             CalData.cpp
                             Calibrator.cpp
+                            CapturePositionConfig.cpp
                             ConfigParser.cpp
                             Renderman.cpp
                             TextureConfigData.cpp)

@@ -1,7 +1,16 @@
 #include "CalTarget.hpp"
 
+#include <opencv2/core.hpp>
+
+#include "config/TargetConfigData.hpp"
+
 namespace epilog
 {
+
+CalTarget::CalTarget(TargetConfigData* pTargetConfig) : m_textureID(0)
+{
+    m_pData = pTargetConfig;
+}
 
 CalTarget::~CalTarget(void)
 {
@@ -11,50 +20,53 @@ CalTarget::~CalTarget(void)
 
 void CalTarget::setupData(void)
 {
-    float vertices[] = {
-        // positions          // colors           // texture coords
-         0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
-         0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
-    };
-    unsigned int indices[] = {
-        0, 1, 3,  // first Triangle
-        1, 2, 3   // second Triangle
-    };
 
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, 
-                    GL_STATIC_DRAW);
+    // Setup the vertex buffer, vertex array buffer, and element buffer for
+        // offscreen rendering
+    glGenVertexArrays(1, &m_VAO);
+    glGenBuffers(1, &m_VBO);
+    glGenBuffers(1, &m_EBO);
+    
+    glBindVertexArray(m_VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
+    
+    // Fill buffers
+    size_t vertexBufferSz = 
+        m_pData->m_vertexCount * TargetConfigData::VERTEX_SIZE * sizeof(float);
+    glBufferData(   GL_ARRAY_BUFFER, 
+                    vertexBufferSz, 
+                    m_pData->m_vertexData.get(), 
+                    GL_STATIC_DRAW );
+                    
+    size_t indexBufferSz = 
+        m_pData->m_triCount * TargetConfigData::TRI_SIZE * sizeof(unsigned int);
+    glBufferData(   GL_ELEMENT_ARRAY_BUFFER, 
+                    indexBufferSz, 
+                    m_pData->m_indices.get(), 
+                    GL_STATIC_DRAW );
 
     // Describe the vertex array contents
     // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glVertexAttribPointer(  0, 3, GL_FLOAT, GL_FALSE, 
+                            TargetConfigData::VERTEX_SIZE * sizeof(float), 
+                            (void*)0 );
     glEnableVertexAttribArray(0);
-    // color attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
     // texture coord attribute
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(  1, 2, GL_FLOAT, GL_FALSE, 
+                            TargetConfigData::VERTEX_SIZE * sizeof(float), 
+                            (void*)(TargetConfigData::POS_SIZE * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     setupTexture();
 }
 
 void CalTarget::draw(void) const
 {
-    if (m_textureID) glBindTexture(GL_TEXTURE_2D, m_textureID);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-}
-
-void CalTarget::setTexture(cv::Mat& texImg)
-{
-    texImg.copyTo(m_texImg);
-}
-
-void CalTarget::setTexture(CalTex& texture)
-{
-    setTexture(texture.getTexture());
+    glBindVertexArray(m_VAO);
+    if (m_textureID) 
+        glBindTexture(GL_TEXTURE_2D, m_textureID);
+    glDrawElements(GL_TRIANGLES, m_pData->m_triCount, GL_UNSIGNED_INT, 0);
 }
 
 void CalTarget::setupTexture(void)
@@ -84,4 +96,4 @@ void CalTarget::setupTexture(void)
                     m_texImg.ptr());
 }
 
-} // namespace epilog
+} /// namespace epilog

@@ -11,6 +11,9 @@
 #include "TargetConfigData.hpp"
 #include "CapturePositionConfig.hpp"
 
+#include "CalTex.hpp"
+#include "CalTarget.hpp"
+
 namespace epilog
 {
 
@@ -29,45 +32,17 @@ public:
     static CalData* getInstance();
 /// End Singleton pattern code ///
 
-    operator std::string() const
-    {
-        std::stringstream classStr;
-        classStr << "CalData:\n";
-        classStr << std::string(m_camModel);
-        classStr << "\n";
-        classStr << "Renderer Settings:\n";
-        classStr << "\tVertex Shader Source: " << m_vertexShaderSourceFile << "\n";
-        classStr << "\tFragment Shader Source: " << m_fragmentShaderSourceFile << "\n";
-        classStr << "\tPreview Vertex Shader Source: " << m_previewVSSourceFile << "\n";
-        classStr << "\tPreview Fragment Shader Source: " << m_previewFSSourceFile << "\n";
-        classStr << "\tPreview Window Width: " << m_previewWidth << "\n";
-        classStr << "\tPreview Window Height: " << m_previewHeight << "\n";
-        classStr << "\n";
-        classStr << "Textures:\n";
-        for (auto key : m_textures)
-        {
-            classStr << key.first << " - ";
-            classStr << std::string(key.second);
-            classStr << "\n";
-        }
-        classStr << "Targets:\n";
-        for (auto key : m_targets)
-        {
-            classStr << key.first << " - ";
-            classStr << std::string(key.second);
-            classStr << "\n";
-        }
-        classStr << "Captures:\n";
-        for (auto cap : m_captures)
-        {
-            classStr << std::string(cap);
-            classStr << "\n";
-        }
-        return classStr.str();
-    }
+    operator std::string() const;
+    
+    // Populate shaders, textures, and targets
+    void setupData(void);
     
     // Read shaders from text files
     void readShaders(void);
+    
+    // Generate render data
+    void generateTextures(void);
+    void generateTargets(void);
 
     // Camera parameters
     CameraModel m_camModel;
@@ -88,10 +63,12 @@ public:
     size_t m_previewHeight;
 
     // Texture settings
-    std::map<int, TextureConfigData> m_textures;
+    std::map<int, TextureConfigData> m_textureSettings;
+    std::map<int, CalTex> m_textures;
 
     // Target settings
-    std::map<int, TargetConfigData> m_targets;
+    std::map<int, TargetConfigData> m_targetSettings;
+    std::map<int, CalTarget> m_targets;
     
     // Capture settings
     std::vector<CapturePositionConfig> m_captures;

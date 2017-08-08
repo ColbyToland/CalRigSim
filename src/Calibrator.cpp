@@ -41,13 +41,14 @@ bool Calibrator::performCal(void)
     }
 
     // Rebuild the ChArUco board for use in detection
-    Ptr<aruco::Dictionary> dict = aruco::getPredefinedDictionary(data->m_textures[0].m_markerDict);
-    Ptr<aruco::CharucoBoard> charucoboard = aruco::CharucoBoard::create(
-                                                            data->m_textures[0].m_chessCols, 
-                                                            data->m_textures[0].m_chessRows, 
-                                                            data->m_textures[0].m_chessSqSz, 
-                                                            data->m_textures[0].m_arucoSz, 
-                                                            dict);
+    Ptr<aruco::Dictionary> dict = aruco::getPredefinedDictionary(
+                                    data->m_textureSettings[0].m_markerDict);
+    Ptr<aruco::CharucoBoard> charucoboard = 
+            aruco::CharucoBoard::create(data->m_textureSettings[0].m_chessCols, 
+                                        data->m_textureSettings[0].m_chessRows, 
+                                        data->m_textureSettings[0].m_chessSqSz, 
+                                        data->m_textureSettings[0].m_arucoSz, 
+                                        dict);
     Ptr<aruco::Board> board = charucoboard.staticCast<aruco::Board>();
 
     // Extract corners and ids from images

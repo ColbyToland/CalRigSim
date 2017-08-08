@@ -8,7 +8,7 @@ class CameraModel
 public:
     CameraModel() : m_width(1024), 
                     m_height(768), 
-                    m_fov(100.0)
+                    m_focal_len(430)
     {}
 
     operator std::string() const
@@ -17,13 +17,13 @@ public:
         classStr << "Camera:\n";
         classStr << "\tWidth: " << m_width << "\n";
         classStr << "\tHeight: " << m_height << "\n";
-        classStr << "\tfov: " << m_fov << "\n";
+        classStr << "\tFocal Length: " << m_focal_len << "\n";
         return classStr.str();
     }
 
     size_t m_width;
     size_t m_height;
-    double m_fov;
+    double m_focal_len;
 
 private:
 };

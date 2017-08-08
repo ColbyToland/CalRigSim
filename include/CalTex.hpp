@@ -7,20 +7,23 @@
 
 #include <string>
 
+#include "config/TextureConfigData.hpp"
+
 namespace epilog
 {
 
 class CalTex
 {
 public:
-    CalTex() { }
-
-    void genChArUco();
-    void readImage(std::string filename);
+    CalTex(TextureConfigData& texConfig);
 
     cv::Mat& getTexture() { return m_image; }
 
 private:
+    CalTex() { }
+    
+    void setupImage(void);
+    
     cv::Mat m_image;
 };
 

@@ -10,8 +10,9 @@ namespace epilog
 class TargetConfigData
 {
 public:
-    const size_t VERTEX_SIZE = 5;
-    const size_t TRI_SIZE = 3;
+    static const size_t VERTEX_SIZE = 5;
+    static const size_t POS_SIZE = 3;
+    static const size_t TRI_SIZE = 3;
 
     TargetConfigData(void) :    m_texID(0),
                                 m_vertexCount(0),

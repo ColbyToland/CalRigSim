@@ -18,17 +18,15 @@ namespace epilog
 class Renderman
 {
 public:
-    static CalTarget s_defaultTarget;
-
-    Renderman(CalTarget* target);
     Renderman(void);
 
     bool init();
     void mainLoop(void);
+    
+    void oldMainLoop(void);
 
 private:
-    GLFWwindow *    m_pwindow;
-    CalTarget *     m_pTarget;
+    GLFWwindow * m_pwindow;
 
     GLuint  m_shaderProgram;
     GLuint  m_previewShaderProgram;
@@ -39,6 +37,9 @@ private:
     
     glm::mat4 convertCVtoGLCamera(cv::Mat& ocvCam, float near, float far);
     glm::mat4 projectiveCam(float near, float far);
+    
+    void setupPreview(GLuint& quadVAO);
+    void setupFramebuffer(GLuint& fbo, GLuint& offscreenTextId);
 
 };
 
