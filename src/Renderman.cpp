@@ -1,5 +1,5 @@
 #include "Renderman.hpp"
-#include "CalData.hpp"
+#include "config/CalData.hpp"
 
 namespace epilog
 {
@@ -56,7 +56,7 @@ bool Renderman::initGLFW(void)
     } 
     
     // Setup resize callback
-    glViewport(0, 0, config->m_camModel.width, config->m_camModel.height);
+    glViewport(0, 0, config->m_camModel.m_width, config->m_camModel.m_height);
     glfwSetFramebufferSizeCallback(m_pwindow, framebuffer_size_callback);
 
     return true;
@@ -239,11 +239,11 @@ glm::mat4 Renderman::projectiveCam(float near, float far)
     CalData* config = CalData::getInstance();
     
     cv::Mat ocvCam = cv::Mat::eye(3,3,CV_32F);
-    float f_pixels = config->m_camModel.width / (2.0f*glm::tan(glm::radians(config->m_camModel.fov/2.0f)));
+    float f_pixels = config->m_camModel.m_width / (2.0f*glm::tan(glm::radians(config->m_camModel.m_fov/2.0f)));
     ocvCam.at<float>(0,0) = f_pixels;
     ocvCam.at<float>(1,1) = f_pixels;
-    ocvCam.at<float>(0,2) = config->m_camModel.width / 2;
-    ocvCam.at<float>(1,2) = config->m_camModel.height / 2;
+    ocvCam.at<float>(0,2) = config->m_camModel.m_width / 2;
+    ocvCam.at<float>(1,2) = config->m_camModel.m_height / 2;
     
     return convertCVtoGLCamera(ocvCam, near, far);
 }
@@ -256,7 +256,7 @@ void Renderman::mainLoop(void)
     glm::mat4 proj = projectiveCam(0.1f, 100.0f); 
 
     float texAspectRatio = 
-        (float)config->m_pxWidthTarget / (float)config->m_pxHeightTarget;
+        (float)config->m_textures[0].m_pxWidthTarget / (float)config->m_textures[0].m_pxHeightTarget;
     glm::mat4 texturePrescaler;
     texturePrescaler[0][0] = texAspectRatio;
     texturePrescaler[1][1] = 1.0f;
@@ -310,7 +310,7 @@ void Renderman::mainLoop(void)
     glGenTextures(1, &offscreenTextId);
     glBindTexture(GL_TEXTURE_2D, offscreenTextId);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 
-                    config->m_camModel.width, config->m_camModel.height, 
+                    config->m_camModel.m_width, config->m_camModel.m_height, 
                     0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -318,7 +318,7 @@ void Renderman::mainLoop(void)
                             offscreenTextId, 0);
 
     // Array for retrieving the texture image
-    size_t numBytes = config->m_camModel.width * config->m_camModel.height * 3;
+    size_t numBytes = config->m_camModel.m_width * config->m_camModel.m_height * 3;
     std::unique_ptr<GLubyte> texImg(new GLubyte[numBytes]);
 
     int rotDeg = 0;
@@ -371,7 +371,7 @@ void Renderman::mainLoop(void)
         {
             glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, (void *)texImg.get());
             cv::Mat byteMat = cv::Mat(numBytes, 1, CV_8U, (void *)texImg.get()).clone();
-            cv::Mat img = byteMat.reshape(3, config->m_camModel.height);
+            cv::Mat img = byteMat.reshape(3, config->m_camModel.m_height);
             config->m_calImages.push_back(img);
             if (saveImages)
             { 

@@ -1,0 +1,96 @@
+%YAML:1.0
+---
+camera:
+   width: 2048
+   height: 1536
+   fov: 100.
+renderer:
+   preview_width: 1024
+   preview_height: 768
+   vs_filename: "perspective.vs"
+   fs_filename: "basic.fs"
+   preview_vs_filename: "preview.vs"
+   preview_fs_filename: "preview.fs"
+textures:
+   -
+      id: 1984
+      type: charuco
+      charuco:
+         aruco_dict: DICT_4X4_1000
+         rows: 30
+         cols: 15
+         px_width: 1000
+         px_height: 2000
+targets:
+   -
+      id: 2017
+      tex_id: 1984
+      vertex_data:
+         -
+            pos:
+               x: 5.0000000000000000e-01
+               y: 5.0000000000000000e-01
+               z: 0.
+            tex_coord:
+               x: 1.
+               y: 1.
+         -
+            pos:
+               x: 5.0000000000000000e-01
+               y: -5.0000000000000000e-01
+               z: 0.
+            tex_coord:
+               x: 1.
+               y: 0.
+         -
+            pos:
+               x: -5.0000000000000000e-01
+               y: -5.0000000000000000e-01
+               z: 0.
+            tex_coord:
+               x: 0.
+               y: 0.
+         -
+            pos:
+               x: -5.0000000000000000e-01
+               y: 5.0000000000000000e-01
+               z: 0.
+            tex_coord:
+               x: 0.
+               y: 1.
+      tri_indices:
+         -
+            A: 0
+            B: 1
+            C: 3
+         -
+            A: 1
+            B: 2
+            C: 3
+captures:
+   -
+      target_id: 2017
+      transforms:
+         -
+            seq_id: 73
+            type: R
+            axis:
+               x: 1.
+               y: 0.
+               z: 0.
+            angle: 45.
+         -
+            seq_id: 157
+            type: R
+            axis:
+               x: 0.
+               y: 0.
+               z: -1.
+            angle: 3.
+         -
+            seq_id: 331
+            type: T
+            axis:
+               x: 0.
+               y: 0.
+               z: -4.0000000596046448e-01

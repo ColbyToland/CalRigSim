@@ -1,5 +1,5 @@
 #include "Calibrator.hpp"
-#include "CalData.hpp"
+#include "config/CalData.hpp"
 
 #include <iostream>
 #include <vector>
@@ -41,12 +41,12 @@ bool Calibrator::performCal(void)
     }
 
     // Rebuild the ChArUco board for use in detection
-    Ptr<aruco::Dictionary> dict = aruco::getPredefinedDictionary(data->m_markerDict);
+    Ptr<aruco::Dictionary> dict = aruco::getPredefinedDictionary(data->m_textures[0].m_markerDict);
     Ptr<aruco::CharucoBoard> charucoboard = aruco::CharucoBoard::create(
-                                                            data->m_chessCols, 
-                                                            data->m_chessRows, 
-                                                            data->m_chessSqSz, 
-                                                            data->m_arucoSz, 
+                                                            data->m_textures[0].m_chessCols, 
+                                                            data->m_textures[0].m_chessRows, 
+                                                            data->m_textures[0].m_chessSqSz, 
+                                                            data->m_textures[0].m_arucoSz, 
                                                             dict);
     Ptr<aruco::Board> board = charucoboard.staticCast<aruco::Board>();
 

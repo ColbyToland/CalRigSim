@@ -17,7 +17,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/string_cast.hpp"
 
-#include "CalData.hpp"
+#include "config/ConfigParser.hpp"
 #include "Calibrator.hpp"
 #include "CalTarget.hpp"
 #include "CalTex.hpp"
@@ -50,22 +50,8 @@ int main( int argc, char** argv )
     // Define some configuration data
     //  In the future populate these values from a config file.
     CalData* data = CalData::getInstance();
-    data->m_markerDict = aruco::DICT_4X4_1000;
-    int size = 15;
-    data->m_chessRows = 2*size;
-    data->m_chessCols = size;
-    data->m_pxWidthTarget = 1000;
-    data->m_pxHeightTarget = 2000;
-    data->m_vertexShaderSourceFile = "perspective.vs";
-    data->m_fragmentShaderSourceFile = "basic.fs";
-    data->m_previewVSSourceFile = "preview.vs";
-    data->m_previewFSSourceFile = "preview.fs";
-    data->readShaders();
-    data->m_camModel.width = 2048; // 3 MP = 2048x1536?
-    data->m_camModel.height = 1536;
-    data->m_camModel.fov = 100;
-    data->m_previewWidth = 1024;
-    data->m_previewHeight = 768;
+    bool success = ConfigParser::readFile("test.yml");
+    if (!success) return -1;
 
     // Create texture
     CalTex charucoTex;
@@ -96,7 +82,7 @@ int main( int argc, char** argv )
     
     cout << "Reprojection Error: " << data->m_calRepError << endl;
     cout << "Camera Matrix: \n" << data->m_calCamMatrix << endl;
-    float halfw = data->m_camModel.width / 2.0f;
+    float halfw = data->m_camModel.m_width / 2.0f;
     float fov = 2.0f*glm::degrees(glm::atan((float)data->m_calCamMatrix.at<double>(0,0),halfw));
     printf("FOV: %f\n", fov);
     cout << "Distortion Model: \n" << data->m_calDistCoeffs << endl;

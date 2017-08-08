@@ -10,7 +10,7 @@
 #include "glm/gtx/string_cast.hpp"
 
 #include "CalTarget.hpp"
-#include "CameraModel.hpp"
+#include "config/CameraModel.hpp"
 
 namespace epilog
 {

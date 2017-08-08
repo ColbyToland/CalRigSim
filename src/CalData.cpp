@@ -1,4 +1,4 @@
-#include "CalData.hpp"
+#include "config/CalData.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -12,14 +12,7 @@ namespace epilog
 CalData* CalData::s_pInstance = nullptr;
 
 CalData::CalData()
-    :   m_markerDict(cv::aruco::DICT_4X4_250),
-        m_chessRows(8),
-        m_chessCols(8),
-        m_chessSqSz(0.04f), 
-        m_arucoSz(0.02f), 
-        m_pxWidthTarget(100),
-        m_pxHeightTarget(100),
-        m_previewWidth(100),
+    :   m_previewWidth(100),
         m_previewHeight(100),
         m_calImagesReady(false),
         m_calFlags(0),
@@ -36,11 +29,6 @@ CalData* CalData::getInstance()
     return s_pInstance;
 }
 /// End Singleton pattern code ///
-
-bool CalData::readConfig(std::string filename)
-{
-    return false;
-}
 
 void CalData::readShaders(void)
 {
