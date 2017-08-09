@@ -24,7 +24,7 @@ public:
         std::stringstream classStr;
         classStr << "Target:\n";
         classStr << "\tTexture ID: " << m_texID << "\n";
-        classStr << "\tVertices:";
+        classStr << "\tVertices: " << m_vertexCount;
         for (size_t ind = 0; ind < m_vertexCount*VERTEX_SIZE; ++ind)
         {
             if (ind % VERTEX_SIZE == 0)
@@ -32,6 +32,7 @@ public:
             classStr << m_vertexData.get()[ind] << "\t";
         }
         classStr << "\n";
+        classStr << "\tTriangle Count: " << m_triCount << "\n";
         classStr << "\tTriangle Vertex Indices:";
         for (size_t ind = 0; ind < m_triCount*TRI_SIZE; ++ind)
         {

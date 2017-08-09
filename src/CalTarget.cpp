@@ -4,12 +4,16 @@
 
 #include "config/TargetConfigData.hpp"
 
+#include "config/CalData.hpp"
+
+#include "Debugger.hpp"
+
 namespace epilog
 {
 
-CalTarget::CalTarget(TargetConfigData* pTargetConfig) : m_textureID(0)
+CalTarget::CalTarget(int configInd) : m_textureID(0),
+                                      m_configInd(configInd)
 {
-    m_pData = pTargetConfig;
 }
 
 CalTarget::~CalTarget(void)
@@ -20,30 +24,35 @@ CalTarget::~CalTarget(void)
 
 void CalTarget::setupData(void)
 {
-
+    CalData* config = CalData::getInstance();
+    
     // Setup the vertex buffer, vertex array buffer, and element buffer for
         // offscreen rendering
     glGenVertexArrays(1, &m_VAO);
-    glGenBuffers(1, &m_VBO);
-    glGenBuffers(1, &m_EBO);
+    
+    GLuint VBO, EBO;
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
     
     glBindVertexArray(m_VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    
+    TargetConfigData* pData = &config->m_targetSettings.at(m_configInd);
     
     // Fill buffers
     size_t vertexBufferSz = 
-        m_pData->m_vertexCount * TargetConfigData::VERTEX_SIZE * sizeof(float);
+        pData->m_vertexCount * TargetConfigData::VERTEX_SIZE * sizeof(float);
     glBufferData(   GL_ARRAY_BUFFER, 
                     vertexBufferSz, 
-                    m_pData->m_vertexData.get(), 
+                    pData->m_vertexData.get(), 
                     GL_STATIC_DRAW );
                     
     size_t indexBufferSz = 
-        m_pData->m_triCount * TargetConfigData::TRI_SIZE * sizeof(unsigned int);
+        pData->m_triCount * TargetConfigData::TRI_SIZE * sizeof(unsigned int);
     glBufferData(   GL_ELEMENT_ARRAY_BUFFER, 
                     indexBufferSz, 
-                    m_pData->m_indices.get(), 
+                    pData->m_indices.get(), 
                     GL_STATIC_DRAW );
 
     // Describe the vertex array contents
@@ -56,21 +65,34 @@ void CalTarget::setupData(void)
     glVertexAttribPointer(  1, 2, GL_FLOAT, GL_FALSE, 
                             TargetConfigData::VERTEX_SIZE * sizeof(float), 
                             (void*)(TargetConfigData::POS_SIZE * sizeof(float)));
-    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(1);   
 
     setupTexture();
 }
 
 void CalTarget::draw(void) const
 {
+    CalData* config = CalData::getInstance();
+    TargetConfigData* pData = &config->m_targetSettings.at(m_configInd);
+    
     glBindVertexArray(m_VAO);
-    if (m_textureID) 
+    if (m_textureID)
+    { 
         glBindTexture(GL_TEXTURE_2D, m_textureID);
-    glDrawElements(GL_TRIANGLES, m_pData->m_triCount, GL_UNSIGNED_INT, 0);
+    }
+        
+    glDrawElements(GL_TRIANGLES, 
+                    TargetConfigData::TRI_SIZE*pData->m_triCount, 
+                    GL_UNSIGNED_INT, 
+                    0);
 }
 
 void CalTarget::setupTexture(void)
 {
+    CalData* config = CalData::getInstance();
+    TargetConfigData* pData = &config->m_targetSettings.at(m_configInd);
+    cv::Mat texImg = config->m_textures.at(pData->m_texID).getTexture();
+    
     if (m_textureID)
         glDeleteTextures(1, &m_textureID);
 
@@ -84,16 +106,16 @@ void CalTarget::setupTexture(void)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     GLenum colorFormat = GL_BGR;
-	if (m_texImg.channels() == 1)
+	if (texImg.channels() == 1)
 	{
 		colorFormat = GL_LUMINANCE;
 	}
  
 	// Create the texture
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 
-                    m_texImg.cols, m_texImg.rows, 
+                    texImg.cols, texImg.rows, 
                     0, colorFormat, GL_UNSIGNED_BYTE,
-                    m_texImg.ptr());
+                    texImg.ptr());
 }
 
 } /// namespace epilog

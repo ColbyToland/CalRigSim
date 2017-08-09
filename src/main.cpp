@@ -71,8 +71,7 @@ int main( int argc, char** argv )
         return -1;
     }
     DEBUG_OUT("Begin render loop");
-    renderer.oldMainLoop();
-    //renderer.mainLoop();
+    renderer.mainLoop();
 
     // Calibrate
     DEBUG_OUT("Calibrate");

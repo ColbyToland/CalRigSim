@@ -7,7 +7,7 @@ camera:
 renderer:
    preview_width: 1024
    preview_height: 768
-   vs_filename: "avg_perspective.vs"
+   vs_filename: "perspective.vs"
    fs_filename: "basic.fs"
    preview_vs_filename: "preview.vs"
    preview_fs_filename: "preview.fs"
@@ -32,7 +32,7 @@ targets:
             pos:
                x: 5.0000000000000000e-01
                y: 5.0000000000000000e-01
-               z: -1.
+               z: 0.
             tex_coord:
                x: 1.
                y: 1.
@@ -40,7 +40,7 @@ targets:
             pos:
                x: 5.0000000000000000e-01
                y: -5.0000000000000000e-01
-               z: -1.
+               z: 0.
             tex_coord:
                x: 1.
                y: 0.
@@ -48,7 +48,7 @@ targets:
             pos:
                x: -5.0000000000000000e-01
                y: -5.0000000000000000e-01
-               z: -1.
+               z: 0.
             tex_coord:
                x: 0.
                y: 0.
@@ -56,7 +56,7 @@ targets:
             pos:
                x: -5.0000000000000000e-01
                y: 5.0000000000000000e-01
-               z: -1.
+               z: 0.
             tex_coord:
                x: 0.
                y: 1.
@@ -79,4 +79,4 @@ captures:
             axis:
                x: 0.
                y: 0.
-               z: 0.
+               z: -1.

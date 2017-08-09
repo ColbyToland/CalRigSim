@@ -124,7 +124,7 @@ void CalData::generateTargets(void)
     for (auto kv : m_targetSettings)
     {
         m_targets.insert(std::pair<int, CalTarget>( kv.first, 
-                                                    CalTarget(&kv.second)));
+                                                    CalTarget(kv.first)));
     }
 }
 

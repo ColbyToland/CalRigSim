@@ -12,7 +12,7 @@ namespace epilog
 class CalTarget
 {
 public:
-    CalTarget(TargetConfigData* pTargetConfig);
+    CalTarget(int configInd);
 
     ~CalTarget(void);
 
@@ -25,13 +25,10 @@ private:
     void setupTexture(void);
     
     GLuint m_VAO;
-    GLuint m_VBO;
-    GLuint m_EBO;
 
-    cv::Mat m_texImg;
     GLuint  m_textureID;
     
-    TargetConfigData* m_pData;
+    int m_configInd;
 };
 
 } // namespace epilog
