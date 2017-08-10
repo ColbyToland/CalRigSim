@@ -5,25 +5,26 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/string_cast.hpp"
 
-#include <map>
 #include <string>
 #include <sstream>
-
-#include "GeomTransform.hpp"
 
 namespace epilog
 {
 
-class CapturePositionConfig
+enum class GeomTransformType {ROTATION, TRANSLATION, INVALID};
+
+class GeomTransform
 {
 public:
-    CapturePositionConfig(void) : m_targetID(0)
-    { }
+    GeomTransform(void);
 
     operator std::string() const;
     
-    int m_targetID;
-    std::map<int, GeomTransform> m_transforms;
+    static GeomTransformType mapStringToTransformType(std::string transformStr);
+
+    GeomTransformType m_type;
+    float m_axis[3];
+    float m_angle;
 
 private:
 };

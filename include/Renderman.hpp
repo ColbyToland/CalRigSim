@@ -23,7 +23,7 @@ public:
     bool init();
     void mainLoop(void);
     
-    void oldMainLoop(void);
+    static glm::mat4 composite(std::map<int, GeomTransform>& transforms);
 
 private:
     GLFWwindow * m_pwindow;

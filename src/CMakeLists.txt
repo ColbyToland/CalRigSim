@@ -14,6 +14,7 @@ add_executable(${PROJ_NAME} main.cpp
                             Calibrator.cpp
                             CapturePositionConfig.cpp
                             ConfigParser.cpp
+                            GeomTransform.cpp
                             Renderman.cpp
                             TextureConfigData.cpp)
 

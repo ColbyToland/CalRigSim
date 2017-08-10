@@ -27,6 +27,7 @@ private:
     static void readTextureSettings(cv::FileNode& textureNode);
     static bool readTargetSettings(cv::FileNode& targetNode);
     static void readCaptureSettings(cv::FileNode& captureNode);  
+    static GeomTransform readTransforms(cv::FileNode& transformNode);
 };
 
 } /// namespace epilog

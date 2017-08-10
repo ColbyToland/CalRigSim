@@ -3,6 +3,11 @@
 #include <string>
 #include <sstream>
 
+#include "GeomTransform.hpp"
+
+namespace epilog
+{
+
 class CameraModel
 {
 public:
@@ -24,6 +29,9 @@ public:
     size_t m_width;
     size_t m_height;
     double m_focal_len;
+    std::map<int, GeomTransform> m_transforms;
 
 private:
 };
+
+}

@@ -4,6 +4,8 @@
 #include <string>
 #include <sstream>
 
+#include "GeomTransform.hpp"
+
 namespace epilog
 {
 
@@ -45,10 +47,14 @@ public:
     }
 
     int m_texID;
+    
     std::shared_ptr<float> m_vertexData;
     size_t m_vertexCount;
+    
     std::shared_ptr<unsigned int> m_indices;
     size_t m_triCount;
+    
+    std::map<int, GeomTransform> m_transforms;
 
 private:
 };

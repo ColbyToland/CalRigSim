@@ -65,6 +65,16 @@ void ConfigParser::readCamSettings(FileNode& cameraNode)
     config->m_camModel.m_width = (int)cameraNode[CAM_WIDTH_TAG];
     config->m_camModel.m_height = (int)cameraNode[CAM_HEIGHT_TAG];
     config->m_camModel.m_focal_len = (float)cameraNode[CAM_FOCAL_LEN_TAG];
+    
+    // Read transforms
+    FileNode tNode = cameraNode[TRANSFORMS_TAG];
+    for (auto node : tNode)
+    {
+        int seq_id = node[TRANSFORM_SEQUENCE_ID_TAG];
+        GeomTransform transform;
+        transform = readTransforms(node);
+        config->m_camModel.m_transforms[seq_id] = transform;
+    }
 }
 
 void ConfigParser::readRendererSettings(FileNode& rendererNode)
@@ -180,6 +190,16 @@ bool ConfigParser::readTargetSettings(FileNode& targetNode)
     }
     target.m_triCount = triCount;
     
+    // Read transforms
+    FileNode tNode = targetNode[TRANSFORMS_TAG];
+    for (auto node : tNode)
+    {
+        int seq_id = node[TRANSFORM_SEQUENCE_ID_TAG];
+        GeomTransform transform;
+        transform = readTransforms(node);
+        target.m_transforms[seq_id] = transform;
+    }
+    
     config->m_targetSettings.insert(pair<int, TargetConfigData>(targetID, target));
     
     return true;
@@ -193,22 +213,30 @@ void ConfigParser::readCaptureSettings(FileNode& captureNode)
     capture.m_targetID = captureNode[CAPTURE_TARGET_ID_TAG];
     
     // Read transforms
-    FileNode tNode = captureNode[CAPTURE_TRANSFORMS_TAG];
+    FileNode tNode = captureNode[TRANSFORMS_TAG];
     for (auto node : tNode)
     {
-        int seq_id = node[CAPTURE_SEQUENCE_ID_TAG];
+        int seq_id = node[TRANSFORM_SEQUENCE_ID_TAG];
         GeomTransform transform;
-        transform.m_type = 
-            GeomTransform::mapStringToTransformType(node[CAPTURE_TRANSFORM_TYPE_TAG]);
-        FileNode axisNode = node[TRANSFORM_AXIS_TAG];
-        transform.m_axis[0] = axisNode[AXIS_X_TAG];
-        transform.m_axis[1] = axisNode[AXIS_Y_TAG];
-        transform.m_axis[2] = axisNode[AXIS_Z_TAG];
-        transform.m_angle = node[ROTATION_ANGLE_TAG];
+        transform = readTransforms(node);
         capture.m_transforms[seq_id] = transform;
     }
     
     config->m_captures.push_back(capture);
+}
+
+GeomTransform ConfigParser::readTransforms(FileNode& node)
+{
+    // Read transforms
+    GeomTransform transform;
+    transform.m_type = 
+        GeomTransform::mapStringToTransformType(node[TRANSFORM_TYPE_TAG]);
+    FileNode axisNode = node[TRANSFORM_AXIS_TAG];
+    transform.m_axis[0] = axisNode[AXIS_X_TAG];
+    transform.m_axis[1] = axisNode[AXIS_Y_TAG];
+    transform.m_axis[2] = axisNode[AXIS_Z_TAG];
+    transform.m_angle = node[ROTATION_ANGLE_TAG];
+    return transform;
 }
 
 } /// namespace epilog

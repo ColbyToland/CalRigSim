@@ -1,4 +1,14 @@
 #pragma once
+        
+#define AXIS_X_TAG "x"
+#define AXIS_Y_TAG "y"
+#define AXIS_Z_TAG "z" 
+
+#define TRANSFORMS_TAG "transforms"
+#define TRANSFORM_SEQUENCE_ID_TAG "seq_id"
+#define TRANSFORM_TYPE_TAG "type"
+    #define TRANSFORM_AXIS_TAG "axis"
+    #define ROTATION_ANGLE_TAG "angle"   
 
 #define CAMERA_TAG "camera"
     #define CAM_WIDTH_TAG "width"
@@ -24,11 +34,7 @@
         #define CHESS_SQUARE_SIZE_TAG "chess_sz"
         #define ARUCO_SIZE_TAG "aruco_sz"
         #define CHARUCO_PIXEL_WIDTH_TAG "px_width"
-        #define CHARUCO_PIXEL_HEIGHT_TAG "px_height"
-        
-#define AXIS_X_TAG "x"
-#define AXIS_Y_TAG "y"
-#define AXIS_Z_TAG "z"        
+        #define CHARUCO_PIXEL_HEIGHT_TAG "px_height"    
         
 #define TARGETS_TAG "targets"
     #define TARGET_ID_TAG "id"
@@ -43,8 +49,3 @@
         
 #define CAPTURES_TAG "captures"
     #define CAPTURE_TARGET_ID_TAG "target_id"
-    #define CAPTURE_TRANSFORMS_TAG "transforms"
-    #define CAPTURE_SEQUENCE_ID_TAG "seq_id"
-    #define CAPTURE_TRANSFORM_TYPE_TAG "type"
-        #define TRANSFORM_AXIS_TAG "axis"
-        #define ROTATION_ANGLE_TAG "angle"

@@ -70,6 +70,7 @@ void Renderman::mainLoop(void)
 
     // Perspective Projection pipeline matrices
     glm::mat4 proj = projectiveCam(0.1f, 100.0f);
+    glm::mat4 cameraTransform = composite(config->m_camModel.m_transforms);
     
     // Render so long as the window is open
     bool saveImages = true;
@@ -81,8 +82,13 @@ void Renderman::mainLoop(void)
          capInd < totalCaps && !glfwWindowShouldClose(m_pwindow); 
          ++capInd)
     {
+        // Get target information
+        size_t targetInd = config->m_captures[capInd].m_targetID;
+        
         // compose transform in model matrix
-        glm::mat4 modelview = config->m_captures[capInd].composite();
+        glm::mat4 targetTransform = composite(config->m_targetSettings.at(targetInd).m_transforms);
+        glm::mat4 captureTransform = composite(config->m_captures[capInd].m_transforms);
+        glm::mat4 modelview = cameraTransform * captureTransform * targetTransform;
         
         // Offscreen render pass
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -94,8 +100,7 @@ void Renderman::mainLoop(void)
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelview));
         int projLoc = glGetUniformLocation(m_shaderProgram, "projection");
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
-
-        size_t targetInd = config->m_captures[capInd].m_targetID;
+        
         config->m_targets.at(targetInd).draw();
         
         // Save rendering
@@ -107,7 +112,7 @@ void Renderman::mainLoop(void)
         if (saveImages)
         { 
             std::stringstream imgName;
-            imgName << "cal_" << capInd << ".png";
+            imgName << "output/cal_" << capInd << ".png";
             imwrite(imgName.str(), img);
         }
         
@@ -374,6 +379,37 @@ void Renderman::setupFramebuffer(GLuint& fbo, GLuint& offscreenTextId)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 
                             offscreenTextId, 0);
+}
+
+glm::mat4 Renderman::composite(std::map<int, GeomTransform>& transforms)
+{
+    glm::mat4 modelview;
+    
+    for (auto kv : transforms)
+    {
+        if (GeomTransformType::ROTATION == kv.second.m_type)
+        {
+            modelview = glm::rotate(modelview, 
+                                    glm::radians(kv.second.m_angle),
+                                    glm::vec3(  kv.second.m_axis[0],
+                                                kv.second.m_axis[1],
+                                                kv.second.m_axis[2]));
+        }
+        else if (GeomTransformType::TRANSLATION == kv.second.m_type)
+        {
+            modelview = glm::translate( modelview,
+                                        glm::vec3(  kv.second.m_axis[0],
+                                                    kv.second.m_axis[1],
+                                                    kv.second.m_axis[2]) );
+        }
+        else
+        {
+            std::cerr << "Invalid transform:" << std::endl;
+            std::cerr << std::string(kv.second) << std::endl;
+        }
+    }
+    
+    return modelview;
 }
 
 } // namespace epilog
