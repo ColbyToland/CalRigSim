@@ -92,6 +92,7 @@ void Renderman::mainLoop(void)
         
         // Offscreen render pass
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        glViewport(0,0,config->m_camModel.m_width,config->m_camModel.m_height);
         glClearColor(0.2f,0.2f,0.2f,1.0f);
 	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
         glUseProgram(m_shaderProgram);
@@ -118,6 +119,7 @@ void Renderman::mainLoop(void)
         
         // Preview render pass 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0,0,config->m_previewWidth,config->m_previewHeight);
 	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUseProgram(m_previewShaderProgram);
         glBindVertexArray(quadVAO);

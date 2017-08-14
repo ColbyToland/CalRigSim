@@ -25,12 +25,12 @@ textures:
       type: charuco
       charuco:
          aruco_dict: DICT_4X4_1000
-         rows: 30
-         cols: 15
-         chess_sz: 0.04
-         aruco_sz: 0.02
-         px_width: 1000
-         px_height: 2000
+         rows: 4
+         cols: 8
+         chess_sz: 0.125
+         aruco_sz: 0.0625
+         px_width: 1600
+         px_height: 800
 targets:
    -
       id: 2017
@@ -38,32 +38,32 @@ targets:
       vertex_data:
          -
             pos:
-               x: 5.0000000000000000e-01
-               y: 5.0000000000000000e-01
+               x: 0.5
+               y: 0.25
                z: 0.
             tex_coord:
                x: 1.
                y: 1.
          -
             pos:
-               x: 5.0000000000000000e-01
-               y: -5.0000000000000000e-01
+               x: 0.5
+               y: -0.25
                z: 0.
             tex_coord:
                x: 1.
                y: 0.
          -
             pos:
-               x: -5.0000000000000000e-01
-               y: -5.0000000000000000e-01
+               x: -0.5
+               y: -0.25
                z: 0.
             tex_coord:
                x: 0.
                y: 0.
          -
             pos:
-               x: -5.0000000000000000e-01
-               y: 5.0000000000000000e-01
+               x: -0.5
+               y: 0.25
                z: 0.
             tex_coord:
                x: 0.
