@@ -11,16 +11,22 @@
 namespace epilog
 {
 
-enum class GeomTransformType {ROTATION, TRANSLATION, INVALID};
+enum class GeomTransformType {ROTATION, TRANSLATION, ROTATION_CYCLE, INVALID};
 
 class GeomTransform
 {
 public:
+    static std::string INVALID_TAG;
+    static std::string ROTATION_TAG;
+    static std::string TRANSLATION_TAG;
+    static std::string ROTATION_CYCLE_TAG;
+
     GeomTransform(void);
 
     operator std::string() const;
     
     static GeomTransformType mapStringToTransformType(std::string transformStr);
+    static std::string mapTransformTypeToString(GeomTransformType transform);
 
     GeomTransformType m_type;
     float m_axis[3];

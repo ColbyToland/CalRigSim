@@ -77,7 +77,6 @@ void Renderman::mainLoop(void)
     size_t capInd = 0;
     size_t totalCaps = config->m_captures.size();
     
-    //while (!glfwWindowShouldClose(m_pwindow)) /*
     for (capInd = 0; 
          capInd < totalCaps && !glfwWindowShouldClose(m_pwindow); 
          ++capInd)

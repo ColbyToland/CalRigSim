@@ -213,6 +213,8 @@ void ConfigParser::readCaptureSettings(FileNode& captureNode)
     capture.m_targetID = captureNode[CAPTURE_TARGET_ID_TAG];
     
     // Read transforms
+    bool animation = false;
+    int animation_id = -1;
     FileNode tNode = captureNode[TRANSFORMS_TAG];
     for (auto node : tNode)
     {
@@ -220,9 +222,32 @@ void ConfigParser::readCaptureSettings(FileNode& captureNode)
         GeomTransform transform;
         transform = readTransforms(node);
         capture.m_transforms[seq_id] = transform;
+        if (transform.m_type == GeomTransformType::ROTATION_CYCLE)
+        {
+            animation = true;
+            animation_id = seq_id;
+        }
     }
     
-    config->m_captures.push_back(capture);
+    if (animation)
+    {
+        float delta_angle = capture.m_transforms[animation_id].m_angle;
+        float angle = 0.0f;
+        do
+        {
+            capture.m_transforms[animation_id].m_type = GeomTransformType::ROTATION;
+            capture.m_transforms[animation_id].m_angle = angle;
+            
+            config->m_captures.push_back(capture);
+            
+            angle = angle + delta_angle;
+        } 
+        while (abs(angle) < 360.0f);
+    }
+    else
+    {
+        config->m_captures.push_back(capture);
+    }
 }
 
 GeomTransform ConfigParser::readTransforms(FileNode& node)

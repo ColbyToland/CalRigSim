@@ -11,7 +11,7 @@ camera:
          axis:
             x: 0.
             y: 0.
-            z: -4.0000000596046448e-01
+            z: -0.4
 renderer:
    preview_width: 1024
    preview_height: 768
@@ -92,130 +92,9 @@ captures:
       transforms:
          -
             seq_id: 157
-            type: R
-            axis:
-               x: 0.
-               y: 0.
-               z: -1.
-            angle: 0.
-   -
-      target_id: 2017
-      transforms:
-         -
-            seq_id: 157
-            type: R
+            type: R_cycle
             axis:
                x: 0.
                y: 0.
                z: -1.
             angle: 30.
-   -
-      target_id: 2017
-      transforms:
-         -
-            seq_id: 157
-            type: R
-            axis:
-               x: 0.
-               y: 0.
-               z: -1.
-            angle: 60.
-   -
-      target_id: 2017
-      transforms:
-         -
-            seq_id: 157
-            type: R
-            axis:
-               x: 0.
-               y: 0.
-               z: -1.
-            angle: 90.
-   -
-      target_id: 2017
-      transforms:
-         -
-            seq_id: 157
-            type: R
-            axis:
-               x: 0.
-               y: 0.
-               z: -1.
-            angle: 120.
-   -
-      target_id: 2017
-      transforms:
-         -
-            seq_id: 157
-            type: R
-            axis:
-               x: 0.
-               y: 0.
-               z: -1.
-            angle: 150.
-   -
-      target_id: 2017
-      transforms:
-         -
-            seq_id: 157
-            type: R
-            axis:
-               x: 0.
-               y: 0.
-               z: -1.
-            angle: 180.
-   -
-      target_id: 2017
-      transforms:
-         -
-            seq_id: 157
-            type: R
-            axis:
-               x: 0.
-               y: 0.
-               z: -1.
-            angle: 210.
-   -
-      target_id: 2017
-      transforms:
-         -
-            seq_id: 157
-            type: R
-            axis:
-               x: 0.
-               y: 0.
-               z: -1.
-            angle: 240.
-   -
-      target_id: 2017
-      transforms:
-         -
-            seq_id: 157
-            type: R
-            axis:
-               x: 0.
-               y: 0.
-               z: -1.
-            angle: 270.
-   -
-      target_id: 2017
-      transforms:
-         -
-            seq_id: 157
-            type: R
-            axis:
-               x: 0.
-               y: 0.
-               z: -1.
-            angle: 300.
-   -
-      target_id: 2017
-      transforms:
-         -
-            seq_id: 157
-            type: R
-            axis:
-               x: 0.
-               y: 0.
-               z: -1.
-            angle: 330.
