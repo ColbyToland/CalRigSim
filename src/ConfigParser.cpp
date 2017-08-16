@@ -62,8 +62,9 @@ bool ConfigParser::readFile(string filename)
 void ConfigParser::readCamSettings(FileNode& cameraNode)
 {
     CalData* config = CalData::getInstance();
-    config->m_camModel.m_width = (int)cameraNode[CAM_WIDTH_TAG];
-    config->m_camModel.m_height = (int)cameraNode[CAM_HEIGHT_TAG];
+    int width = (int)cameraNode[CAM_WIDTH_TAG];
+    int height = (int)cameraNode[CAM_HEIGHT_TAG];
+    config->m_camModel.setSize(width, height);
     config->m_camModel.m_focal_len = (float)cameraNode[CAM_FOCAL_LEN_TAG];
     
     float distCoeffs[DIFF_COEFF_SZ];

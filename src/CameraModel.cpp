@@ -9,13 +9,21 @@ using namespace cv;
 namespace epilog
 {
 
-CameraModel::CameraModel() : m_width(1024), 
-                m_height(768), 
-                m_focal_len(430)
+CameraModel::CameraModel() : m_focal_len(430)
 {
+    setSize(1024,768);
+    
     memset(m_diffCoeffs, 0, DIFF_COEFF_SZ*sizeof(float));
-    m_map_x.create(m_height, m_width, CV_32FC1);
-    m_map_y.create(m_height, m_width, CV_32FC1);
+    m_map_x.create(m_rendheight, m_rendwidth, CV_32FC1);
+    m_map_y.create(m_rendheight, m_rendwidth, CV_32FC1);
+}
+
+void CameraModel::setSize(size_t w, size_t h)
+{
+    m_width = w;
+    m_height = h;
+    m_rendwidth = m_width + 2*BORDER_SZ;
+    m_rendheight = m_height + 2*BORDER_SZ;
 }
 
 void CameraModel::setDiffCoeffs(float* diffCoeffs)
@@ -29,10 +37,13 @@ void CameraModel::getDiffCoeffs(float* diffCoeffs)
     memcpy(diffCoeffs, m_diffCoeffs, DIFF_COEFF_SZ*sizeof(float));
 }   
 
-void CameraModel::getDiffMap(Mat& mapx, Mat& mapy)
+void CameraModel::applyDiffMap(Mat& renderImg, Mat& distImg)
 {
-    m_map_x.copyTo(mapx);
-    m_map_y.copyTo(mapy);
+    distImg = renderImg.clone();
+    Rect roi(BORDER_SZ, BORDER_SZ, m_width, m_height);
+    remap(renderImg, distImg, m_map_x, m_map_y, CV_INTER_CUBIC);
+    Mat roiImg = distImg(roi);
+    distImg = roiImg.clone();
 }
 
 CameraModel::operator std::string() const
@@ -55,8 +66,10 @@ void CameraModel::genDiffMaps()
     const unsigned int DIVISIONS = 10000;
     const unsigned int SUB_DIVISION = 1000;
     float deltaR = 1.0f / (float)(DIVISIONS);
-    float maxRn = sqrt(0.5f);
-    map<unsigned int, pair<float,float> > radialFuncMap;
+    float maxXn = (float)m_rendwidth / (float)m_width;
+    float maxYn = (float)m_rendheight / (float)m_height;
+    float maxRn = sqrt(maxXn*maxXn + maxYn*maxYn);
+    map<unsigned int, float> radialFuncMap;
     for (float rn = 0.0f; rn <= (maxRn + deltaR); rn += deltaR)
     {    
         float r2 = rn*rn;
@@ -66,25 +79,26 @@ void CameraModel::genDiffMaps()
         float rnDist = rn * distFactor;
     
         unsigned int rKey = (unsigned int)(rnDist*DIVISIONS);
-        radialFuncMap[rKey] = make_pair(rn,rnDist);
+        radialFuncMap[rKey] = rn;
     }
     
     // Generate the map
-    m_map_x.create(m_height, m_width, CV_32FC1);
-    m_map_y.create(m_height, m_width, CV_32FC1);
-    float cx = (float)m_width / 2.0f;
-    float cy = (float)m_height / 2.0f;
-    for (size_t row = 0; row < m_height; ++row)
+    m_map_x.create(m_rendheight, m_rendwidth, CV_32FC1);
+    m_map_y.create(m_rendheight, m_rendwidth, CV_32FC1);
+    float cx = (float)m_rendwidth / 2.0f;
+    float cy = (float)m_rendheight / 2.0f;
+    for (size_t row = 0; row < m_rendheight; ++row)
     {
         float ynd = (row - cy) / m_height;
-        for (size_t col = 0; col < m_width; ++col)
+        for (size_t col = 0; col < m_rendwidth; ++col)
         {
             float xnd = (col - cx) / m_width;
             float rnDist = sqrt(xnd*xnd + ynd*ynd);
             float theta = atan2(ynd,xnd);
+            
+            // Get the initial solution from the map of radial values
             unsigned int key = (unsigned int)(rnDist*DIVISIONS);
             float rn = 0.0f;
-            // Get the initial solution from the map of radial values
             if (radialFuncMap.count(key) == 0)
             {
                 // Find lower bound key
@@ -94,14 +108,14 @@ void CameraModel::genDiffMaps()
                 {
                     if (radialFuncMap.count(lowKey) > 0)
                     {
-                        rn = radialFuncMap[lowKey].first;
+                        rn = radialFuncMap[lowKey];
                         break;
                     }
                 }
             }
             else
             {
-                rn = radialFuncMap[key].first;
+                rn = radialFuncMap[key];
             }
             
             // Refine solution

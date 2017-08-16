@@ -65,7 +65,7 @@ void Renderman::mainLoop(void)
     setupFramebuffer(fbo, offscreenTextId);
 
     // Array for retrieving the texture image
-    size_t numBytes = config->m_camModel.m_width * config->m_camModel.m_height * 3;
+    size_t numBytes = config->m_camModel.m_rendwidth * config->m_camModel.m_rendheight * 3;
     std::unique_ptr<GLubyte> texImg(new GLubyte[numBytes]);
 
     // Perspective Projection pipeline matrices
@@ -91,7 +91,7 @@ void Renderman::mainLoop(void)
         
         // Offscreen render pass
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-        glViewport(0,0,config->m_camModel.m_width,config->m_camModel.m_height);
+        glViewport(0,0,config->m_camModel.m_rendwidth,config->m_camModel.m_rendheight);
         glClearColor(0.2f,0.2f,0.2f,1.0f);
 	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
         glUseProgram(m_shaderProgram);
@@ -107,11 +107,9 @@ void Renderman::mainLoop(void)
         glBindTexture(GL_TEXTURE_2D, offscreenTextId);
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, (void *)texImg.get());
         cv::Mat byteMat = cv::Mat(numBytes, 1, CV_8U, (void *)texImg.get()).clone();
-        cv::Mat img = byteMat.reshape(3, config->m_camModel.m_height);
-        cv::Mat distImg = img.clone();
-        cv::Mat mapx, mapy;
-        config->m_camModel.getDiffMap(mapx, mapy);
-        remap(img, distImg, mapx, mapy, CV_INTER_CUBIC);
+        cv::Mat img = byteMat.reshape(3, config->m_camModel.m_rendheight);
+        cv::Mat distImg;
+        config->m_camModel.applyDiffMap(img, distImg);
         config->m_calImages.push_back(distImg);
         if (saveImages)
         { 
@@ -181,7 +179,7 @@ bool Renderman::initGLFW(void)
     } 
     
     // Setup resize callback
-    glViewport(0, 0, config->m_camModel.m_width, config->m_camModel.m_height);
+    glViewport(0, 0, config->m_previewWidth, config->m_previewHeight);
     glfwSetFramebufferSizeCallback(m_pwindow, framebuffer_size_callback);
 
     return true;
@@ -378,7 +376,7 @@ void Renderman::setupFramebuffer(GLuint& fbo, GLuint& offscreenTextId)
     glGenTextures(1, &offscreenTextId);
     glBindTexture(GL_TEXTURE_2D, offscreenTextId);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 
-                    config->m_camModel.m_width, config->m_camModel.m_height, 
+                    config->m_camModel.m_rendwidth, config->m_camModel.m_rendheight, 
                     0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

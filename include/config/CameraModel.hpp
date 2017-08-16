@@ -16,17 +16,23 @@ namespace epilog
 class CameraModel
 {
 public:
+    const size_t BORDER_SZ = 200;
+
     CameraModel();
 
     void setDiffCoeffs(float* diffCoeffs);
     void getDiffCoeffs(float* diffCoeffs);
     
-    void getDiffMap(cv::Mat& mapx, cv::Mat& mapy);
+    void setSize(size_t w, size_t h);
+    
+    void applyDiffMap(cv::Mat& renderImg, cv::Mat& distImg);
 
     operator std::string() const;
 
     size_t m_width;
     size_t m_height;
+    size_t m_rendwidth;
+    size_t m_rendheight;
     double m_focal_len;
     std::map<int, GeomTransform> m_transforms;
 
