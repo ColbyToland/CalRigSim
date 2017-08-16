@@ -108,12 +108,16 @@ void Renderman::mainLoop(void)
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, (void *)texImg.get());
         cv::Mat byteMat = cv::Mat(numBytes, 1, CV_8U, (void *)texImg.get()).clone();
         cv::Mat img = byteMat.reshape(3, config->m_camModel.m_height);
-        config->m_calImages.push_back(img);
+        cv::Mat distImg = img.clone();
+        cv::Mat mapx, mapy;
+        config->m_camModel.getDiffMap(mapx, mapy);
+        remap(img, distImg, mapx, mapy, CV_INTER_CUBIC);
+        config->m_calImages.push_back(distImg);
         if (saveImages)
         { 
             std::stringstream imgName;
             imgName << "output/cal_" << capInd << ".png";
-            imwrite(imgName.str(), img);
+            imwrite(imgName.str(), distImg);
         }
         
         // Preview render pass 

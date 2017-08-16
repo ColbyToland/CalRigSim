@@ -12,6 +12,7 @@ add_executable(${PROJ_NAME} main.cpp
                             CalTex.cpp
                             CalData.cpp
                             Calibrator.cpp
+                            CameraModel.cpp
                             CapturePositionConfig.cpp
                             ConfigParser.cpp
                             GeomTransform.cpp

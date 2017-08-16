@@ -4,6 +4,11 @@ camera:
    width: 2048
    height: 1536
    focal_len_px: 850.
+   k1: -0.16191
+   k2: 0.06448
+   k3: -0.01821
+   p1: -0.000998
+   p2: -0.000189
    transforms:
       -
          seq_id: 331
@@ -85,7 +90,7 @@ targets:
                x: 1.
                y: 0.
                z: 0.
-            angle: 45.
+            angle: 30.
 captures:
    -
       target_id: 2017

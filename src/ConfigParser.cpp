@@ -66,6 +66,15 @@ void ConfigParser::readCamSettings(FileNode& cameraNode)
     config->m_camModel.m_height = (int)cameraNode[CAM_HEIGHT_TAG];
     config->m_camModel.m_focal_len = (float)cameraNode[CAM_FOCAL_LEN_TAG];
     
+    float distCoeffs[DIFF_COEFF_SZ];
+    memset(distCoeffs, 0, DIFF_COEFF_SZ*sizeof(float));
+    distCoeffs[0] = (float)cameraNode[CAM_DIST_K1];
+    distCoeffs[1] = (float)cameraNode[CAM_DIST_K2];
+    distCoeffs[2] = (float)cameraNode[CAM_DIST_P1];
+    distCoeffs[3] = (float)cameraNode[CAM_DIST_P2];
+    distCoeffs[4] = (float)cameraNode[CAM_DIST_K3];
+    config->m_camModel.setDiffCoeffs(distCoeffs);
+    
     // Read transforms
     FileNode tNode = cameraNode[TRANSFORMS_TAG];
     for (auto node : tNode)

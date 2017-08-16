@@ -14,6 +14,11 @@
     #define CAM_WIDTH_TAG "width"
     #define CAM_HEIGHT_TAG "height"
     #define CAM_FOCAL_LEN_TAG "focal_len_px"
+    #define CAM_DIST_K1 "k1"
+    #define CAM_DIST_K2 "k2"
+    #define CAM_DIST_K3 "k3"
+    #define CAM_DIST_P1 "p1"
+    #define CAM_DIST_P2 "p2"
 
 #define RENDERER_TAG "renderer"
     #define RENDERER_PREVIEW_WIDTH_TAG "preview_width"
