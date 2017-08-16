@@ -172,6 +172,20 @@ bool Calibrator::performCal(void)
     }
     data->m_calFlags = m_flags;
     data->m_calRepError = repError;
+    
+    // Undistort the images
+    int capInd = 0;
+    for (auto img : data->m_calImages)
+    {
+        Mat undist;
+        undistort(img, undist, cameraMatrix, distCoeffs, cameraMatrix);
+        
+        std::stringstream imgName;
+        imgName << "output/undist_" << capInd << ".png";
+        imwrite(imgName.str(), undist); 
+        
+        capInd++;
+    }
 
     return true;
 }
