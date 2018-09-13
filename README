@@ -35,3 +35,5 @@ Classes:    * CalTex class generates ChArUco texture (or others)
                 by Renderman for calibration.
             * Calibrator class determines camera parameters from images and
                 stores them to CalData
+
+
